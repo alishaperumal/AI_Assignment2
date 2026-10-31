@@ -1,0 +1,19 @@
+# Data settings (Person A). Copy to a new file per experiment and change ONE thing.
+split: splits/split_v1.json     # FROZEN - never regenerate after Friday
+target: per_set                 # per_set | consensus   (ablation E2)
+crop: 512
+pos_frac: 0.7                   # share of crops centred on a filament
+preprocess:
+  mask_disc: false
+  clahe: false
+  local_norm: false
+  mean: 0.5                     # replace with values from cache/norm_stats.json
+  std: 0.25
+aug:
+  hflip: 0.5
+  vflip: 0.5
+  rot90: 0.5
+  affine: 0.5
+  brightness_contrast: 0.5
+  noise: 0.3
+  blur: 0.2

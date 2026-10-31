@@ -1,0 +1,13 @@
+data
+data/
+cache/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+*.zip
+*.mp4
+.venv*/

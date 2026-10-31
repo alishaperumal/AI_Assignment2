@@ -1,0 +1,14 @@
+numpy
+scipy
+pandas
+matplotlib
+opencv-python
+scikit-image
+pycocotools
+albumentations>=2.0
+segmentation_models_pytorch
+torch
+pyyaml
+jupyter
+nbformat
+pytest
