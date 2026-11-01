@@ -1,0 +1,138 @@
+# Person C: start here
+
+This is the current continuation guide for a teammate or coding assistant. It adds the plain-language interpretation, priorities and implementation gaps discussed after the completed Person B study on 1 November 2026. Read it alongside the frozen [Person C technical handoff](results/person_b_study/person_c_handoff.md). No conversation history is needed to find the evidence below.
+
+The original study and `runs/person_b_final/` remain unchanged. This guide is outside that verified snapshot; transfer it with the current repository, not by inserting files into the package and invalidating its manifest.
+
+## Read in this order
+
+| Document | What it answers |
+|---|---|
+| This guide | What is finished, what the results mean, and what to do next |
+| [README.md](README.md) | Architecture, local environment, commands and artifact locations |
+| [HANDOFF.md](HANDOFF.md) | Data contracts, scoring policy, reproducibility and implementation details |
+| [Frozen Person C handoff](results/person_b_study/person_c_handoff.md) | Selected settings, prediction formats, package contents and portable reproduction commands |
+| [Results interpretation](results/person_b_study/interpretation.md) and [tables/figures](results/person_b_study/study_report.md) | Measured successes, failures, examples and limitations |
+| [Methodology](results/person_b_study/methodology.md) and [protocol](results/person_b_study/protocol.json) | Why the experiments were designed this way and how selection worked |
+| [Completion checks](results/person_b_completion_verification.json) and [package checks](results/person_b_package_verification.json) | What actually finished and was verified |
+| [Assignment PDF](COS711-A2.pdf) and [team guide](<COS711 Assignment 2 Team Plan and Implementation Guide.docx>) | Required deliverables, assessment and division of work |
+
+The assignment allocates 20 marks to methodology, 30 to segmentation results and 30 to enhancement. Person B provides a substantial experimental foundation; Person C's enhancement/compression study and the team's final presentation remain important. A local PQ score is not a grade or a measure of leaderboard competitiveness. Do not shorten the work because of the deadline.
+
+## What is complete
+
+- Person A's data/evaluation fixes and regenerated EDA.
+- Original baseline completed at its original 20-epoch schedule, with the initial checkpoints/history preserved in `runs/E0_baseline_seed42/archive_epoch2/`.
+- Eleven six-epoch screens; two promoted alternatives trained afresh for 20 epochs and compared with the completed baseline; then three fresh 20-epoch runs of the selected configuration. Total: 17 research runs, 186 epochs.
+- Six full-budget checkpoints reloaded with matching validation metrics; 101 Python tests passed at handoff. Test success checks the implementation, not scientific accuracy.
+- Selected weights/configuration, 122 validation and 180 test prediction archives, locally checked CSV, reports, figures, slides, speaker notes and references.
+- All 888 raw files and the frozen split were independently checked unchanged. The temporary training sleep guard was released when the study finished. Inspect current processes before starting new GPU work; do not infer live state from this historical statement.
+
+No Kaggle or ClickUP upload has been made. Acceptance and the Kaggle score remain unknown by user choice. No external test labels or prohibited annotation metadata were used.
+
+## Understand the result before changing it
+
+The chosen recipe is U-Net/ResNet34, ImageNet initialization, BCE + Dice, AdamW and random foreground-biased 512-pixel crops. Added augmentation transforms are disabled; random crops remain. Whole-image inference produces scores at 2048 x 2048. Pixels strictly above 0.5 become foreground; each 8-connected region becomes one instance.
+
+The three fresh seeds 43/44/45 average **PQ 0.33695 +/- 0.00758**, with sample standard deviation across training runs. Selection seed 42 is excluded. The representative seed-45 checkpoint scores **0.34481** and supplies the exports; it is not the mean run. PQ assesses separate objects and their overlap, not the percentage of pixels classified correctly.
+
+The full-budget choice at seed 42 was nearly tied: no added transforms scored 0.338081 and 1024 whole images scored 0.337451. Their 0.000629 difference does not establish statistical superiority. The original baseline scored 0.320127.
+
+### The extra misses are especially pronounced in the exported run
+
+| Model/run | Matched references (TP) | Unmatched predictions (FP) | References without a good match (FN) |
+|---|---:|---:|---:|
+| Original baseline, seed 42 | 841 | 1,416 | 449 |
+| No added transforms, selection seed 42 | 839 | 1,219 | 451 |
+| Same selected recipe, fresh seed 43 | 835 | 1,229 | 455 |
+| Same selected recipe, fresh seed 44 | 838 | 1,290 | 452 |
+| Same selected recipe, exported seed 45 | 783 | 1,007 | 507 |
+
+Source: [confirmation.csv](results/person_b_study/confirmation.csv) and [fresh_seed_runs.csv](results/person_b_study/fresh_seed_runs.csv). Counts pool comparisons against 200 annotation sets on 122 images; they are not counts of unique physical filaments.
+
+The exported run eliminates 409 unmatched predictions but loses 58 matches relative to the baseline. That balance increases PQ. Removing augmentation at the same selection seed increased misses by only two. Do not claim that removing augmentation inherently caused all 58 extra misses. The exact contribution of training randomness, augmentation and score calibration has not been isolated.
+
+An FN does not always mean no pixels were predicted: a partial outline can fail the required IoU > 0.5 object match and count as both an unmatched prediction and an unmatched reference. Pixel cutoff (`evaluation.threshold`) and object-matching cutoff (`evaluation.iou_threshold`) are different settings. C may experiment with the former; keep the latter at the official value and preserve its strict greater-than rule.
+
+The actual examples show missing extent, detached fragments and a completely missed faint structure. Scores below the pixel cutoff are a possible explanation for some errors, not a proven explanation for every miss. Inspect the saved maps before making that causal claim. Fragmentation counts falling from 193 to 178 can partly reflect predicting less; merging changes only from 23 to 22. Always read these counts with TP, FP, FN and PQ.
+
+## Severity and recommended order
+
+| Concern | Priority | Reason |
+|---|---|---|
+| Missing faint/small filaments and incomplete extent | High for segmentation quality | Directly conflicts with capturing complete fine structures |
+| Extra detections and fragmentation | Medium-high | Still substantial despite the PQ improvement |
+| Merging | Medium | Important in affected cases, but less frequent than fragmentation in the recorded diagnostics |
+| Enhancement/compression not yet measured | High for assignment completion | A major assessment category remains separate from B's completed work |
+| Limited repeats for competing methods and no hidden-test score | Limit on claims | Does not invalidate the work, but prevents claims of a proven best model or known Kaggle performance |
+
+1. **Inspect saved probabilities and sweep a small set of pixel cutoffs around 0.5.** Keep weights, preprocessing, split and scoring fixed. Check whether faint structures are recoverable without adding too many unwanted regions.
+2. **Try one gentle post-processing idea at a time.** A candidate is hysteresis: retain confident regions and weaker pixels connected to them. Another is carefully justified cleanup of isolated extras. These are proposed experiments, not implemented or proven improvements. Hysteresis is described in the [scikit-image documentation](https://scikit-image.org/docs/stable/api/skimage.filters.html#skimage.filters.apply_hysteresis_threshold).
+3. **Address observed gaps and touching objects.** Test targeted repair/separation against the saved difficult cases and then all validation images. Blind small-object removal can erase real filaments; indiscriminate gap filling can merge neighbours. Do not optimize only the illustrative examples.
+4. **Keep PQ primary and show the trade-offs.** Record TP/FP/FN, pixel and filament overlap, and fragmentation/merging alongside PQ. Measure C's isolated processing gain against unchanged seed 45 with the same weights and input probabilities. The difference from original baseline seed 42 also includes B's configuration/seed changes and is not all a C improvement. Retain negative trials. Use a small declared search, not unbounded tuning of the same validation split.
+5. **Measure compression separately.** Compare actual deployable size, quality and complete inference time under matching conditions. Float16 inference and removing optimizer state already exist; neither establishes a completed compression experiment. If training new models, record budgets and repeat promising results as appropriate.
+
+The retained `runs/full/resolution_1024_seed42/` is a useful speed/quality alternative: it nearly tied the selected configuration and ran faster in the recorded single-pass comparison. It changes input scale, field of view, sampling and compute together. It is not a pure resolution ablation or a model-compression result. Its weights are outside the representative transfer package.
+
+## What the code supports, and what C still needs to build
+
+| Existing component | How to build on it |
+|---|---|
+| `inference.probability_to_instances(probability, threshold)` | Current threshold + 8-connectivity conversion; retain as the unchanged reference |
+| `evaluate.py` / `evaluate_model` | Checkpoint-based inference and full validation scoring; inspect its handling of original overlapping/empty annotation layers |
+| `metrics.evaluate_pair`, `metrics.evaluate_mask_layers`, `metrics.MetricAccumulator` | Reuse scoring and pooled aggregation; do not substitute a mean of image PQ values for `PQ_dataset` |
+| `predict.instance_rows`, `predict.write_submission` | Encode instance maps and verify RLE masks; keep zero-detection coverage metadata |
+| `experiments.py` | Sequential training comparisons and records; not an offline post-processing sweep runner |
+| `models.py`, `train.py`, configs | Starting point if a compression experiment requires another model or training run |
+
+**There is currently no CLI that scores saved NPZ probability maps directly.** `evaluate.py --checkpoint ...` reruns model inference. It has no `--predictions-dir` option and no plugin argument for an arbitrary postprocessor. A small separate C runner is the first implementation task for efficient offline sweeps. It should:
+
+- Load one observation at a time with `numpy.load(..., allow_pickle=False)` and align by observation ID.
+- Load the same frozen validation annotations; preserve `evaluate.py`'s lossless handling of original overlapping and empty annotation layers. Scoring only cached integer masks can lose reference information.
+- Apply the selected conversion to the stored scores, evaluate every annotation set, and aggregate through `MetricAccumulator`.
+- First reproduce the seed-45 baseline at cutoff 0.5: 122 observations, 200 annotation sets, PQ 0.3448101728178549, TP 783, FP 1007, FN 507. Read unrounded expected metrics from `runs/person_b_final/evaluation/summary.json` for numerical checks rather than rounded prose/table values. Test this agreement before trusting modified processing.
+- Save settings, checkpoint/split provenance, per-image/per-set results, aggregate metrics, timings and a few representative masks under a new C output directory.
+
+An offline sweep's runtime excludes neural-network inference; it must not be reported as end-to-end model latency. After selecting processing on validation, integrate it into the complete image-to-CSV path and benchmark that path using [the recorded timing boundaries](results/person_b_study/inference_timing_protocol.json).
+
+Simple archive inspection from the original repository (read-only):
+
+```python
+from pathlib import Path
+import numpy as np
+
+folder = Path("runs/person_b_final/evaluation/predictions")
+path = next(iter(sorted(folder.glob("*.npz"))))
+with np.load(path, allow_pickle=False) as sample:
+    print(sample["observation"].item())
+    print(sample["probability"].shape, sample["probability"].dtype)
+    print(sample["instances"].shape, sample["instances"].dtype)
+```
+
+Expected arrays are `(2048, 2048)` float32 scores and uint32 instance IDs. Zero is background. The probabilities already have their original image shape and are outputs of the model; do not normalize them as input images or apply sigmoid again.
+
+## Work locations and preservation
+
+Use the original repository as the development checkout. Suggested new outputs are `runs/person_c/<experiment>/` and `results/person_c/`; these are conventions for future work, not claims that experiments already exist. Save shareable numerical settings in versioned configs, and place machine-specific paths in ignored local configs or supported environment overrides.
+
+Keep `runs/person_b_final/`, existing B run directories, frozen study records and `splits/split_v1.json` as reference artifacts. Do not regenerate the split or write new results into an existing B evaluation directory: evaluation/export commands can overwrite files. Changes to working source must have new experiment provenance; the preserved package contains the old source needed to reproduce B.
+
+On this computer, use `.venv\Scripts\python.exe`. The dataset is at `C:\Users\user-pc\Desktop\COS711_Assig2\filament-segmentation-2026\MAGFiLO_1.0_Kaggle_2026`. Setup and relocation instructions are in README and the frozen handoff. The environment uses Python 3.14.7, PyTorch 2.14.0+cu130 and an RTX 5060 Ti; another machine needs a compatible environment and its own verification. GPU jobs must run sequentially. Check live processes, logs and free space before starting jobs; do not interfere with an existing job.
+
+Use only supplied segmentation labels. Do not use annotation spines, bounding boxes or categories as extra supervision, and do not obtain external test labels. Filename time/instrument information supports splitting/analysis, not model inputs. Keep Kaggle and ClickUP uploads disabled unless the user explicitly changes that instruction.
+
+For every C trial, record a short hypothesis, the one deliberate change, parent checkpoint SHA256, split SHA256, settings/seed/budget, actual status, metrics, runtime scope, artifacts and a plain explanation of what improved or worsened. Report failures as well as successes. Do not claim that a proposed method has been run merely because code exists.
+
+## Transfer and future LLM context
+
+Give Person C **both the current repository and `runs/person_b_final/`**. `runs/`, weights and prediction archives are ignored by Git; a clone alone will not contain them. The package alone lacks this later guide, the complete development tests/config collection, and the presentation directory. Transfer alternative weights separately if needed. Keep the original package layout and verify `manifest.json` after transfer. The raw dataset, environment and resumable optimizer checkpoints are not bundled in that package.
+
+The working checkout has local changes at the time of this documentation update. Before transferring via Git, inspect `git status` and ensure the intended current code/docs have actually been committed and shared, or transfer the complete current working copy. Do not assume the remote repository already contains this work. No commit or push was performed by this documentation update.
+
+For a future coding assistant, use this starting instruction:
+
+> Read AGENTS.md, PERSON_C_START_HERE.md, README.md and HANDOFF.md, then the linked frozen Person C handoff and result interpretation. Inspect actual files, run records and active processes before acting. Person A fixes and Person B training/delivery are complete; continue only the requested Person C task. Preserve the raw dataset, frozen split and B package. Keep implementation simple, GPU jobs sequential and all work local. Distinguish measured results from hypotheses, and record validation evidence plus unsuccessful trials. Begin by stating what already exists, what you intend to add, and how you will verify it.
+
+The documentation supplies context; the assistant must still inspect the implementation and current state. It is not a guarantee that every model will read every file automatically.
+
+Human/team actions remain: combine A/B/C slides, add presenter names, record the required video, include measured enhancement/compression results, and later perform authorized Kaggle/ClickUP submissions. Person B's deck, notes and references are in [delivery/README.md](delivery/README.md).

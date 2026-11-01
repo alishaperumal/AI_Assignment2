@@ -2,6 +2,8 @@
 
 This file describes the corrected data/evaluation interfaces, the completed Person B training study, and the boundary with Person C. Use `README.md` for measured results and commands, `COS711-A2.pdf` for assignment requirements, and the Word team plan for the division of work. The concise delivery guide is [Person C handoff](results/person_b_study/person_c_handoff.md).
 
+For current continuation priorities and future LLM context, read [PERSON_C_START_HERE.md](PERSON_C_START_HERE.md) first. It supplements the frozen technical handoff with the distinction between the selected recipe and the exported seed's extra misses, issue severity, proposed experiments, and the saved-probability evaluation runner that C still needs to implement. [AGENTS.md](AGENTS.md) is the short assistant entry point. The original study/package remains unchanged.
+
 ## Completed work and remaining boundaries
 
 | Area | Delivered | Remaining boundary |

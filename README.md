@@ -4,6 +4,8 @@ The project teaches a neural network to find **solar filaments**: thin, dark str
 
 The assignment specification is `COS711-A2.pdf`; the division of work is in `COS711 Assignment 2 Team Plan and Implementation Guide.docx`. This repository contains corrected data preparation and exploratory analysis, completed model training and controlled experiments, evaluation, and a local submission exporter. Advanced instance separation, compression, team presentation assembly/recording, and authorized uploads remain separate work.
 
+**Continuing as Person C or with a new coding assistant? Start with [PERSON_C_START_HERE.md](PERSON_C_START_HERE.md).** It links the evidence in reading order, explains the extra misses and their severity, identifies the offline scoring runner still to build, and gives a bounded continuation workflow. [AGENTS.md](AGENTS.md) supplies concise repository guidance for assistants. These current guides supplement the frozen B handoff and do not alter its verified package.
+
 ## Completed modelling study
 
 Person A's corrected notebook was executed on the supplied data. The original split is unchanged: 584 training observations, 122 validation observations, and one excluded gap observation. Validation scores compare predictions with all 200 available validation annotation sets.
