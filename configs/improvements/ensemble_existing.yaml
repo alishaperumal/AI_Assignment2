@@ -1,0 +1,21 @@
+# Ensembles of already-trained models (no new training). Candidate 0 is the
+# submitted configuration: pruned-30% FP16 model, cutoff 0.5, bridge 8, min area 320.
+ensembles:
+  - name: submitted_pruned30
+    members: [pruned30]
+  - name: teacher
+    members: [teacher]
+  - name: teacher+kd18
+    members: [teacher, kd18]
+  - name: teacher+label18
+    members: [teacher, label18]
+  - name: teacher+kd18+label18
+    members: [teacher, kd18, label18]
+  - name: teacher+pruned30
+    members: [teacher, pruned30]
+  - name: all4
+    members: [teacher, kd18, label18, pruned30]
+postprocess:
+  - threshold: [0.5, 0.4, 0.45, 0.35]
+    bridge_radius: 8
+    min_area: [320, 240, 400]

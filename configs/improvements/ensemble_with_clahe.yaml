@@ -1,0 +1,19 @@
+# Second ensemble search: adds the new CLAHE + disc-mask model (clahe46).
+# Candidate 0 remains the submitted configuration for paired comparisons.
+ensembles:
+  - name: submitted_pruned30
+    members: [pruned30]
+  - name: clahe46
+    members: [clahe46]
+  - name: teacher+kd18
+    members: [teacher, kd18]
+  - name: teacher+clahe46
+    members: [teacher, clahe46]
+  - name: teacher+kd18+clahe46
+    members: [teacher, kd18, clahe46]
+  - name: teacher+kd18+label18+clahe46
+    members: [teacher, kd18, label18, clahe46]
+postprocess:
+  - threshold: [0.5, 0.45, 0.4]
+    bridge_radius: 8
+    min_area: [240, 320]

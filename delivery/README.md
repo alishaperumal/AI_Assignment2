@@ -1,5 +1,58 @@
 # Local Person B presentation
 
+## Updated final presentation (template gaps filled)
+
+`update_final_presentation.py` reads the team's designed `COS711_A2_Final_Presentation.pptx` and writes a **new** 23-slide file (the input is never modified). It adds the template items the deck was missing: noisy labels, the 11-recipe tuning screen, the final model's kinds of errors, best/worst validation cases (before/after cleanup), what else we tried (including the ensemble and preprocessing retrains), formulation and reasons for choices, resolution/scaling/augmentation details, updated conclusions, and a data/libraries bibliography slide. New slides copy the deck's own shapes, header and Morph transition. Kaggle placeholders are left for the team. Speaker notes total about 1,130 words (roughly 8 minutes).
+
+```powershell
+.\.venv\Scripts\python.exe delivery\final_deck_figures.py
+.\.venv\Scripts\python.exe delivery\update_final_presentation.py --input C:\path\COS711_A2_Final_Presentation.pptx --output C:\path\COS711_A2_Final_Presentation_updated.pptx
+```
+
+`final_deck_figures.py` renders the best/worst panels from the final model's saved validation probabilities and the noisy/faint/disagreeing panels chosen by `eda.ipynb`. The before-cleanup per-image scores come from `offline_eval.py score` on the same probabilities (`runs/improvements/deck/final_model_before_cleanup`), which reproduces the recorded 0.3288.
+
+## New team deck using the supplied university template
+
+**Use `COS711_A2_team_template.pptx` for the template-based team presentation.**
+It preserves the supplied template's masters, university branding, blue headings,
+red bullets, cover artwork, concluding photo panels and required section order.
+The template's cover typo ("Assignment 3") is corrected to "Assignment 2".
+Fourteen slides expand the template's sections for readable results and examples.
+Existing Person B/C and combined decks remain unchanged.
+
+The supplied original is retained unchanged in
+`templates/COS711_A2_Presentation_Template.pptx`. Rebuild to a **new** filename:
+
+```powershell
+.\.venv\Scripts\python.exe delivery\build_template_deck.py --output delivery\COS711_A2_team_template_v2.pptx
+```
+
+The builder requires `python-pptx`, Pillow, matplotlib, NumPy and pycocotools,
+plus the local test images and checked final CSV. It refuses to overwrite an
+existing deck and rejects a final CSV whose SHA-256 differs from its recorded
+receipt. It neither trains nor uploads. Test illustrations show original inputs
+beside masks decoded from the **final** CSV; validation examples are explicitly
+labelled teacher-before/after-cleanup illustrations.
+
+Every slide has PowerPoint speaker notes with plain-language explanations,
+evidence sources and a suggested duration. The adjacent
+`COS711_A2_team_template.json` preserves the script, provenance and test-image IDs.
+Suggested narration totals **8 minutes 30 seconds**, leaving rehearsal margin
+under the 10-minute limit; actual recorded duration must still be checked.
+
+Before recording, add names/student numbers on slides 1-2 and the actual Kaggle
+score, rank/date and screenshot on slide 7. The displayed 0.4031 is **local
+validation PQ**, not a Kaggle result. Keep the speaker webcam in the upper-right
+corner; do not cover the university branding at the bottom right. Bibliography
+slides need not be narrated. The final compressed score is one run, separate
+from Person B's three-run mean and sample standard deviation.
+
+Use this new deck in the existing final ZIP command:
+
+```powershell
+.\.venv\Scripts\python.exe make_submission_zip.py --submission runs\person_c\final\submission.csv --slides delivery\COS711_A2_team_template.pptx --video presentation.mp4 --output COS711_A2_submission.zip
+```
+
 The completed deck is `person_b_results.pptx`: ten slides using the actual 17-run study, three fresh-seed results, runtime measurements and labelled validation examples. `speaker_notes.md` contains the narration and supporting evidence, also embedded in the PPTX. `references.md` lists primary sources. `qa_summary.json` records package checks and visual review; `slide_previews/` contains final rendered slides.
 
 `presentation_plan.md` maps the assignment and team plan to the modelling slides. `slide_content.json` holds editable slide text and narration; `references.json` holds the bibliography. `result_sources.json` points to the real study evidence. The builder uses the bundled Artifact Tool to produce editable PowerPoint text and tables and embedded speaker notes. It never trains, changes the dataset/split, or uploads anything.
