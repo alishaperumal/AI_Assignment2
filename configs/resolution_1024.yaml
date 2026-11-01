@@ -1,0 +1,9 @@
+extends: baseline.yaml
+run:
+  name: E1_resolution1024_seed42
+  output_dir: runs/E1_resolution1024_seed42
+data:
+  crop: 0
+  train_resize: 1024
+inference:
+  resize: 1024

@@ -1,0 +1,8 @@
+extends: baseline.yaml
+run:
+  name: E3_tversky_seed42
+  output_dir: runs/E3_tversky_seed42
+loss:
+  name: bce_tversky
+  alpha: 0.3
+  beta: 0.7

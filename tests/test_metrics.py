@@ -124,3 +124,71 @@ def test_label_components():
 def test_shape_mismatch_raises():
     with pytest.raises(ValueError):
         M.panoptic_quality(np.zeros((3, 3)), np.zeros((4, 4)))
+
+
+def test_unsupported_matching_threshold_rejected():
+    # Below 0.5, one prediction can overlap multiple GT objects sufficiently.
+    with pytest.raises(ValueError, match="iou_thr"):
+        M.match_instances(np.array([[1, 1]]), np.array([[1, 2]]), iou_thr=0.4)
+
+
+def test_observation_mean_does_not_overweight_multiple_annotations():
+    gt = two_filaments()
+    acc = M.MetricAccumulator()
+    acc.add_pair(gt, gt, name="a_set0", observation="a")
+    for k in range(3):
+        acc.add_pair(blank(), gt, name=f"b_set{k}", observation="b")
+    summary = acc.summary()
+    assert summary["observation_PQ_mean"] == pytest.approx(0.5)
+    assert summary["annotation_set_PQ_mean"] == pytest.approx(0.25)
+    assert summary["PQ_mean"] == summary["annotation_set_PQ_mean"]  # legacy alias
+    assert summary["n_observations"] == 2
+    assert summary["n_annotation_sets"] == 4
+    assert acc.per_image[0]["sum_iou"] == 2
+
+
+def test_observation_reduction_rejects_invalid_input():
+    with pytest.raises(ValueError, match="reduce"):
+        M.evaluate_observation(blank(), [blank()], reduce="typo")
+    with pytest.raises(ValueError, match="at least one"):
+        M.evaluate_observation(blank(), [])
+
+
+def test_overlapping_gt_preserves_original_areas_and_reference_matches():
+    a = np.zeros((8, 8), np.uint8)
+    b = a.copy()
+    a[:4, :4] = 1
+    b[:4, 2:6] = 1
+    # Reference scores prediction A at IoU 1 against A and 1/3 against B.
+    result = M.evaluate_mask_layers(a, iter([a, b]))
+    assert (result["tp"], result["fp"], result["fn"]) == (1, 0, 1)
+    assert result["PQ"] == pytest.approx(2 / 3)
+    assert result["filament"]["gt_area"].tolist() == [16, 16]
+    assert result["overlap_pairs"]["iou"].tolist() == pytest.approx([1, 1 / 3])
+    overwritten = a.copy()
+    overwritten[b > 0] = 2
+    assert M.evaluate_pair(a, overwritten)["PQ"] == 0
+    # The reference retains all qualifying pairs if GT masks overlap heavily.
+    duplicates = M.evaluate_mask_layers(a, [a, a])
+    assert (duplicates["tp"], duplicates["fp"], duplicates["fn"]) == (2, 0, 0)
+
+
+def test_official_overlap_diagnostics_include_small_contacts():
+    gt = np.ones((10, 10), np.int32)
+    pred = gt.copy()
+    pred[0, 0] = 2  # tiny one-pixel fragment is excluded by custom tau=0.1
+    result = M.evaluate_pair(pred, gt)
+    assert result["custom_one_to_many"] == 0
+    assert result["any_overlap_one_to_many"] == 1
+    assert result["overlap_degrees"]["gt"].tolist() == [2]
+    assert result["overlap_pairs"]["iou"].tolist() == pytest.approx([0.99, 0.01])
+    assert result["filament"]["iou"].tolist() == pytest.approx([0.99])
+
+
+def test_empty_layers_and_empty_dataset_follow_pooled_reference():
+    zero = np.zeros((4, 4), np.uint8)
+    empty_layer = M.evaluate_mask_layers(zero, [zero])
+    assert (empty_layer["tp"], empty_layer["fp"], empty_layer["fn"]) == (0, 0, 1)
+    acc = M.MetricAccumulator()
+    acc.add(M.evaluate_mask_layers(zero, []))
+    assert acc.summary()["PQ_dataset"] == 0

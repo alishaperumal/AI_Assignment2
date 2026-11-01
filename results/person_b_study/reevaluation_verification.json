@@ -1,0 +1,121 @@
+{
+  "verified_at_utc": "2026-11-01T02:56:11.382807+00:00",
+  "status": "passed",
+  "absolute_tolerance": 1e-12,
+  "runs": [
+    {
+      "run_dir": "runs/E0_baseline_seed42",
+      "seed": 42,
+      "PQ_dataset": 0.3201272840617377,
+      "n_observations": 122,
+      "n_annotation_sets": 200,
+      "checkpoint_sha256": "56080b8e4b6348ee0a3d56cf03ea1b28ec0ebb4b72507a58cfecfb4a79992732",
+      "matched_fields": [
+        "PQ_dataset",
+        "SQ_dataset",
+        "RQ_dataset",
+        "tp",
+        "fp",
+        "fn",
+        "pixel_dice_mean",
+        "pixel_iou_mean"
+      ],
+      "prediction_archives": 122
+    },
+    {
+      "run_dir": "runs/full/no_augmentation_seed42",
+      "seed": 42,
+      "PQ_dataset": 0.3380807049443372,
+      "n_observations": 122,
+      "n_annotation_sets": 200,
+      "checkpoint_sha256": "bf48730cacee2004877e3aafb23724bf0771c17f12ff9ccdbd0d851ce22d7842",
+      "matched_fields": [
+        "PQ_dataset",
+        "SQ_dataset",
+        "RQ_dataset",
+        "tp",
+        "fp",
+        "fn",
+        "pixel_dice_mean",
+        "pixel_iou_mean"
+      ],
+      "prediction_archives": 0
+    },
+    {
+      "run_dir": "runs/full/resolution_1024_seed42",
+      "seed": 42,
+      "PQ_dataset": 0.33745129254063183,
+      "n_observations": 122,
+      "n_annotation_sets": 200,
+      "checkpoint_sha256": "0cca03b93ed2eac1b33f14fa41561dc8e500de840434bb1fc693b9b567c35215",
+      "matched_fields": [
+        "PQ_dataset",
+        "SQ_dataset",
+        "RQ_dataset",
+        "tp",
+        "fp",
+        "fn",
+        "pixel_dice_mean",
+        "pixel_iou_mean"
+      ],
+      "prediction_archives": 0
+    },
+    {
+      "run_dir": "runs/final/no_augmentation_seed43",
+      "seed": 43,
+      "PQ_dataset": 0.33635888430382976,
+      "n_observations": 122,
+      "n_annotation_sets": 200,
+      "checkpoint_sha256": "fff6cb60752d3277010c28162f33ee049e8fa70cc2332b811b3cd67771c1b265",
+      "matched_fields": [
+        "PQ_dataset",
+        "SQ_dataset",
+        "RQ_dataset",
+        "tp",
+        "fp",
+        "fn",
+        "pixel_dice_mean",
+        "pixel_iou_mean"
+      ],
+      "prediction_archives": 0
+    },
+    {
+      "run_dir": "runs/final/no_augmentation_seed44",
+      "seed": 44,
+      "PQ_dataset": 0.32968557851593944,
+      "n_observations": 122,
+      "n_annotation_sets": 200,
+      "checkpoint_sha256": "043a65fb04801eccd7076c56d1ab7930478ad8448b19dde7d0fffc3e827899f7",
+      "matched_fields": [
+        "PQ_dataset",
+        "SQ_dataset",
+        "RQ_dataset",
+        "tp",
+        "fp",
+        "fn",
+        "pixel_dice_mean",
+        "pixel_iou_mean"
+      ],
+      "prediction_archives": 0
+    },
+    {
+      "run_dir": "runs/final/no_augmentation_seed45",
+      "seed": 45,
+      "PQ_dataset": 0.3448101728178549,
+      "n_observations": 122,
+      "n_annotation_sets": 200,
+      "checkpoint_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+      "matched_fields": [
+        "PQ_dataset",
+        "SQ_dataset",
+        "RQ_dataset",
+        "tp",
+        "fp",
+        "fn",
+        "pixel_dice_mean",
+        "pixel_iou_mean"
+      ],
+      "prediction_archives": 122
+    }
+  ]
+}

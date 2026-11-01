@@ -11,3 +11,8 @@ __pycache__/
 *.zip
 *.mp4
 .venv*/
+runs/
+.pytest_cache/
+configs/local*.yaml
+!configs/local_normalization.yaml
+delivery/.build/

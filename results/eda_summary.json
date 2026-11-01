@@ -73,6 +73,8 @@
  "degenerate_sets": 0,
  "overlap_sets": 5,
  "tiny_instances": 1,
+ "annotator_agreement_ground_truth": "cached instance maps; overlapping pixels assigned to later annotation",
+ "annotator_agreement_sampling": "up to 100 multi-annotated observations, seed 0, all ordered pairs",
  "annotator_agreement": {
   "PQ": 0.3419,
   "SQ": 0.6188,
@@ -80,6 +82,7 @@
   "pixel_dice": 0.6241
  },
  "annotator_agreement_n_pairs": 404,
+ "annotator_agreement_n_observations": 100,
  "split": {
   "n_obs": 707,
   "n_train": 584,
@@ -160,6 +163,8 @@
   ]
  },
  "fg_outside_disc_frac": 0.0,
+ "disc_check_n_sets": 60,
+ "disc_check_n_nonempty_sets": 60,
  "augmentation_config": {
   "hflip": 0.5,
   "vflip": 0.5,

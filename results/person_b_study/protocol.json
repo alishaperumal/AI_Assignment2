@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "registered_at_utc": "2026-10-31T22:35:55.217893+00:00",
+  "primary_metric": "PQ_dataset",
+  "split_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3",
+  "screen": {
+    "records_dir": "runs/screen/records",
+    "epochs": 6,
+    "seed": 42,
+    "samples_per_epoch": 960,
+    "expected_variants": [
+      "baseline",
+      "lr_low",
+      "lr_high",
+      "resolution_1024",
+      "disc_mask",
+      "clahe",
+      "local_normalization",
+      "no_augmentation",
+      "consensus",
+      "tversky",
+      "unetplusplus"
+    ],
+    "early_stopping": false
+  },
+  "confirmation": {
+    "epochs": 20,
+    "seed": 42,
+    "samples_per_epoch": 960,
+    "promote_nonbaseline_count": 2,
+    "promotion_rule": "Rank completed screening runs by best pooled validation PQ; promote the top two non-baseline configurations to fresh 20-epoch training. No combinations or additional tuning.",
+    "baseline_anchor": "runs/E0_baseline_seed42 if all 20 epochs complete; otherwise fresh fixed-budget baseline in runs/full/baseline_seed42",
+    "selection_rule": "Highest best-checkpoint PQ_dataset at full budget. Exact ties prefer baseline, then fewer parameters, then variant name.",
+    "early_stopping": false,
+    "promotion_tie_break": "Fewer parameters, then variant name for exact screening-PQ ties."
+  },
+  "final": {
+    "epochs": 20,
+    "seeds": [
+      43,
+      44,
+      45
+    ],
+    "samples_per_epoch": 960,
+    "early_stopping": false,
+    "selection_seed_in_final_mean": false,
+    "representative_rule": "Highest validation PQ among the three fresh-seed best checkpoints; exact ties prefer lower seed."
+  },
+  "baseline_resume": {
+    "run_dir": "runs/E0_baseline_seed42",
+    "resume_epoch": 2,
+    "original_epochs": 20,
+    "original_patience": 8,
+    "archive": "runs/E0_baseline_seed42/archive_epoch2",
+    "preserve_original_schedule": true
+  },
+  "kaggle": {
+    "status": "not_submitted_by_user_choice",
+    "score": null
+  },
+  "notes": [
+    "GPU training runs are sequential.",
+    "Same frozen split, 960 samples and 240 planned optimizer update attempts per epoch; input resolution changes compute and field of view, not just pixel scale.",
+    "Separate training-only normalization per preprocessing variant, bounded to 200 training observations.",
+    "Consensus changes target construction and observation weighting.",
+    "Tversky prioritizes missed foreground; it does not explicitly constrain topology.",
+    "Best validation PQ chooses checkpoints and configurations. Validation scores are not an unbiased hidden-test estimate.",
+    "Three fresh seeds estimate training-run variability; per-image standard deviations are separate.",
+    "Single-seed full-budget comparisons cannot establish statistical significance of gains over the baseline.",
+    "Threshold0.5, original-resolution scoring, and simple connected components stay fixed; advanced separation/compression remain Person C work.",
+    "No Kaggle or ClickUP uploads; no external test labels or prohibited metadata.",
+    "Six-epoch screening may favor quick-learning configurations; only the two promoted alternatives and baseline are compared at full budget. No global optimum is claimed.",
+    "The no_augmentation variant disables added geometric and photometric transforms; random foreground-biased crop sampling remains enabled."
+  ],
+  "clarifications": [
+    {
+      "at_utc": "2026-10-31T22:58:33.244102+00:00",
+      "reason": "Completed baseline recorded three legitimate AMP gradient-overflow skipped steps. Equal budgets mean equal samples/update attempts; actual optimizer and skipped counts are reported. No training settings or selection rules changed."
+    }
+  ]
+}

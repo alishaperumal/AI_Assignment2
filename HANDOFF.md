@@ -1,186 +1,124 @@
-# Handoff: Person A → Person B
+# Handoff: Person A fixes, Person B pipeline, and Person C interfaces
 
-Person A's part (data and evaluation) is done and pushed. This file covers what exists,
-how to use it, and what to watch out for. Your part is the baseline, losses, training
-loop, tuning and the experiment log (Steps 4 and 5 of the team plan).
+This file describes the corrected data/evaluation interfaces, the completed Person B training study, and the boundary with Person C. Use `README.md` for measured results and commands, `COS711-A2.pdf` for assignment requirements, and the Word team plan for the division of work. The concise delivery guide is [Person C handoff](results/person_b_study/person_c_handoff.md).
 
-## 1. What Person A delivered
+For current continuation priorities and future LLM context, read [PERSON_C_START_HERE.md](PERSON_C_START_HERE.md) first. It supplements the frozen technical handoff with the distinction between the selected recipe and the exported seed's extra misses, issue severity, proposed experiments, and the saved-probability evaluation runner that C still needs to implement. [AGENTS.md](AGENTS.md) is the short assistant entry point. The original study/package remains unchanged.
 
-| File | What it gives you |
-|---|---|
-| `data.py` | Cached instance masks, the frozen split, preprocessing, augmentation, and PyTorch datasets and loaders |
-| `metrics.py` | PQ, SQ, RQ, per-filament Dice and IoU, one-to-many and many-to-one counts |
-| `eda.ipynb` | EDA, figures and numbers for the Dataset slide |
-| `splits/split_v1.json` | The **frozen** train/validation split. Never regenerate it. |
-| `tests/` | 23 tests (`pytest -q`) |
-| `results/eda_summary.json` | Machine-readable EDA facts |
+## Completed work and remaining boundaries
 
-## 2. One-time setup on your machine
+| Area | Delivered | Remaining boundary |
+|---|---|---|
+| Person A data | Frozen split protection, configurable paths, validated inputs, deterministic crops/augmentations, Windows-safe workers, bounded training-only statistics; EDA outputs regenerated on the supplied data | Rerun EDA if its data or analysis choices change |
+| Person A evaluation | Official-reference pooled PQ, original overlapping GT masks during evaluation, clearly separated diagnostic metrics | Preserve this scoring policy for later comparisons |
+| Person B training | Original baseline completed with its original schedule; all 17 research runs complete; six full-budget checkpoints independently reloaded with matching scores | Preserve saved configurations and original run records |
+| Person B experiments | Eleven six-epoch screens, two fresh 20-epoch confirmations plus the completed baseline, then three fresh 20-epoch seeds of the selected configuration | Do not mix screening scores with full-budget scores or selection seed 42 with fresh seeds 43/44/45 |
+| Basic submission | Original-resolution masks, checked COCO RLE exporter, 180 test archives, CSV and provenance/coverage sidecar | Kaggle acceptance/score and ClickUP uploads are deliberately deferred |
+| Person B presentation | Methodology/results content, notes and references prepared from the recorded study | Human recording, presenter names and team assembly |
+| Person C | Probability/instance interfaces, checkpoints/configs, detailed validation outputs, shared inference function | Advanced separation/post-processing, compression and its quality/speed/size comparison, team conclusions and final assembly |
 
-```bash
-git pull
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-ln -s /path/to/MAGFiLO_1.0_Kaggle_2026 data     # your own copy of the Kaggle data
-python data.py build-cache                       # about 2 min, creates cache/ (git-ignored)
-pytest -q                                        # expect: 23 passed
-```
+Tests cover data reproducibility (including two spawned workers), split protection, metrics, models/losses, inference, submission encoding, configuration, training/checkpoint behavior, study reporting, and handoff packaging. Training completion is recorded in each `summary.json` and, for suites, `records/*.json` / `experiments.csv`. There are 17 completed research runs and 186 completed epochs across the staged budgets.
 
-`cache/` and `data/` are never committed, so everyone builds their own cache. It is
-deterministic, so you will get identical masks. On Kaggle or Colab, set the data location
-with `export FILAMENT_DATA=/path/to/data` and the cache location with `export FILAMENT_CACHE=/path`.
+The selected configuration is **U-Net/ResNet34 with BCE + Dice and no added geometric/appearance transforms**. Random foreground-biased 512-pixel crops remain enabled. The three fresh seeds give **PQ 0.33695 ± 0.00758** (sample SD); representative seed 45 achieved **0.34481** at epoch 17. The original baseline completed 20 epochs at **0.32013**. Selection seed 42 narrowly preferred no added transforms (0.33808) over 1024 whole images (0.33745); that small single-seed difference does not establish superiority. See [the fixed protocol](results/person_b_study/protocol.json), [selection decision](results/person_b_study/configuration_selection.json), and [fresh-run verification](results/person_b_study/fresh_seed_verification.json).
 
-Then run `python data.py stats`. It prints the image mean and std and the BCE `pos_weight`.
-Put the mean and std into your config (see section 4).
+The old two-epoch baseline artifacts are preserved under `runs/E0_baseline_seed42/archive_epoch2/`. `results/implementation_validation.json` describes that historical implementation check. The current baseline checkpoints and history belong to the completed 20-epoch run. The [preservation check](results/person_b_study/data_preservation_verification.json) confirms all 888 raw files, the frozen split, archived files and first two history entries are unchanged. The final Python suite passed 101 tests. [Completion verification](results/person_b_completion_verification.json) records the delivery/package/presentation checks; [the study report](results/person_b_study/study_report.md) and [plain interpretation](results/person_b_study/interpretation.md) explain the measured results.
 
-## 3. Facts about the data
+## Data facts and corrections
 
-- 1154 annotation sets over 707 observations (one observation = one image). Observations
-  have 1, 2 or 3 annotation sets (411 / 145 / 151). Not every image has every annotator.
-- Images are 2048×2048 8-bit grayscale JPEGs. Filaments are thin dark ribbons on the solar disc.
-- Filaments cover about **0.36%** of pixels, roughly 280 background pixels per filament pixel.
-  Plain BCE will predict all background. This is why the loss needs Dice, Tversky or similar.
-- About 7 filaments per annotation set on average (max 26). No set is empty.
-- 6 instruments (Bh, Ch, Lh, Mh, Th, Uh), evenly spread in train and test.
-- **Split:** 584 train observations, 122 validation, 1 dropped by a 1-day gap. Validation is
-  whole 14-day time blocks, chosen so its instrument mix matches the test file names.
-- Train and test dates both span 2011 to 2022. A held-out time block is probably *harder*
-  than the leaderboard, so expect local PQ a little below Kaggle PQ.
-- Annotator agreement (the human ceiling) is in `results/eda_summary.json` under
-  `annotator_agreement`. Quote that number next to your model's PQ.
+- The provided training data has **707 observations (distinct images), 1,154 annotation sets, and 8,199 filament annotations**. Of the observations, 411 have one set, 145 have two, and 151 have three. Set counts alone do not establish an annotator's identity.
+- Images are 2048 × 2048 grayscale. The recorded mean foreground coverage is approximately **0.36%**, so background greatly outnumbers filament pixels. This makes a foreground-aware loss and suitable sampling useful. It does **not** prove that BCE always learns an all-background prediction.
+- The frozen split has **584 training, 122 validation, and 1 gap-excluded observation**. All annotation sets for one observation stay in the same partition. Validation uses 14-day time blocks with a one-day exclusion gap and an instrument mix matched approximately to the test filenames. The split file is unchanged.
+- Both train and test span 2011–2022. That fact does not tell us whether local validation will be easier or harder than Kaggle's hidden data.
+- `results/eda_summary.json` records annotator agreement. Treat it as a **reference for how differently people draw filaments**, not a mathematical ceiling on model performance. The regenerated EDA uses **100 sampled multi-annotated observations and 404 ordered pairs of cached instance maps**. Those maps resolve overlapping pixels to the later annotation, unlike lossless benchmark evaluation. Both directions of each pair are included, so pairs are not independent observations.
+- The regenerated disc-mask check samples **60 annotation sets**, all nonempty, not the whole dataset. Its zero outside-disc foreground fraction supports that sample only. The notebook and summary record both sample counts. Disc masking and local normalization were measured in the six-epoch screen; neither was promoted to full-budget confirmation, so their screening results do not establish full-budget superiority or inferiority.
+- In five annotation sets, original filament masks overlap. The integer training cache assigns overlapping pixels to the later annotation. Validation reloads original binary layers for affected sets, preserving the source masks for scoring.
+- Consensus uses a foreground vote with ties included: with **two annotation sets it is a union**, and with three it requires two votes. Connected components of the resulting mask can merge nearby/touching filaments. Also, `per_set` samples an observation once per annotation set, whereas `consensus` has one item per observation. The comparison changes both target construction and observation weighting; it is not a pure test of voting alone.
 
-## 4. Getting data into your training loop
+Do not regenerate `splits/split_v1.json`. A differing `save_split` overwrite raises an error, and saving an identical split leaves existing bytes untouched. A future alternative split must have a new versioned filename. Cache building does not alter the split.
+
+## Data API and reproducibility
+
+The training program passes the full `cfg['data']` mapping to:
 
 ```python
 import data as D
-
-train_dl, val_dl = D.make_loaders({
-    "crop": 512,
-    "pos_frac": 0.7,                  # 70% of crops are centred on a filament
-    "batch_size": 8,
-    "num_workers": 4,
-    "target": "per_set",              # "consensus" is ablation E2
-    "preprocess": {"mean": 0.5, "std": 0.25},   # replace with values from `python data.py stats`
-    "aug": {},                        # {} = defaults; set a key to 0 to switch it off
-    "augment": True,
-    "epoch_length": None,             # None = one pass over all annotation sets; larger = more crops
-    "seed": 42,
-})
+train_loader, val_loader = D.make_loaders(cfg['data'])
 ```
 
-**Training batch** (from `train_dl`), a dict:
+Supported data keys are `data_root`, `cache_dir`, `split`, `crop`, `train_resize`, `pos_frac`, `batch_size`, `num_workers`, `val_num_workers`, `target`, `preprocess`, `aug`, `augment`, `epoch_length`, `seed`, `pin_memory`, and `drop_last`. Unknown settings are rejected. Required images, masks, and split membership are checked before training starts. `configs/data_default.yaml` is a legacy data-only example; use `configs/baseline.yaml` and its extensions for the full training CLI.
 
-| Key | Shape / dtype | Meaning |
+Training batches are dictionaries:
+
+| Key | Shape and type | Meaning |
 |---|---|---|
-| `image` | (B, 1, 512, 512) float32 | Normalised, **one channel**. Use `in_channels=1`. |
-| `mask` | (B, 1, 512, 512) float32 | Binary filament mask, for BCE and Dice |
-| `instances` | (B, 512, 512) int32 | Instance ids local to the crop, for distance-transform or watershed targets |
-| `name` | list[str] | Observation id |
+| `image` | `(B, 1, H, W)`, float32 | Preprocessed and normalized grayscale input |
+| `mask` | `(B, 1, H, W)`, float32 | Binary foreground training target |
+| `instances` | `(B, H, W)`, int32 | Cropped instance IDs; 0 is background; positive IDs need not be consecutive |
+| `name` | list of strings | Observation IDs |
 
-**Validation batch** (from `val_dl`, batch size is always 1):
+For the baseline, `H = W = 512`. `pos_frac: 0.7` makes 70% of crop attempts center on a foreground pixel when one exists; augmentation can subsequently move or remove foreground. `crop: 0` uses the whole training image. Optional `train_resize: 1024` resizes the training image before cropping, using area downsampling for images and nearest-neighbor sampling for integer masks. Set matching `inference.resize` for that experiment. Ground-truth validation stays at original resolution.
 
-| Key | Shape / dtype | Meaning |
+Validation always has batch size one because observations have different numbers of annotation sets:
+
+| Key | Shape and type | Meaning |
 |---|---|---|
-| `image` | (1, 1, 2048, 2048) float32 | Whole image |
-| `mask` | (1, 1, 2048, 2048) float32 | Majority-vote foreground, for a validation *loss* only |
-| `gt_sets` | (1, K, 2048, 2048) int32 | One instance map per annotator. K is 1, 2 or 3. **Score against these.** |
-| `name` | list[str] | Observation id |
+| `image` | `(1, 1, 2048, 2048)`, float32 | Whole normalized image |
+| `mask` | `(1, 1, 2048, 2048)`, float32 | Consensus foreground, available for an optional validation loss |
+| `gt_sets` | `(1, K, 2048, 2048)`, int32 | Cached maps for the K available annotation sets |
+| `set_ids` | K one-element tuples after default collation | Original annotation-set IDs, aligned with `gt_sets` |
+| `name` | one-element list of strings | Observation ID |
 
-Things to know:
-- **Preprocessing switches** are in the `preprocess` dict: `mask_disc`, `clahe`, `local_norm`.
-  All are off by default so the baseline is plain. Person A's finding is that `mask_disc` is
-  safe (no filament pixels lie outside the disc) and `local_norm` greatly amplifies noise.
-  Treat both as ablations and log the result either way.
-- **Normalisation is applied after augmentation**, so the brightness augmentation works on [0, 1]
-  values. Don't normalise again in your model.
-- `pin_memory=True` prints a warning on CPU or Apple silicon. It is harmless.
-- On macOS, if `num_workers=4` hangs or errors, set `num_workers=0`.
-- Validation reads full 2048×2048 images, so run it under `torch.no_grad()` and consider
-  half precision or tiled inference if memory is tight.
-- `FilamentDataset` draws random crops, so an epoch is not deterministic even with a fixed seed.
-  Call `D.seed_everything(seed)` at the start of every run.
+Use `evaluate_model` for benchmark scoring: it uses `set_ids` and the original training JSON when an integer cache map would lose overlapping ground truth. Directly looping only over cached `gt_sets` would miss that correction.
 
-## 5. Scoring a validation prediction
+Each crop and augmentation is determined by the run seed, epoch, and sample index. Calling a sample twice in the same epoch gives the same result; a later epoch gives new crops/augmentations. This remains independent of worker scheduling. The trainer calls `train_loader.dataset.set_epoch(epoch)` and resets its shuffle generator for each epoch. Custom training loops must do the same **before creating the iterator**. Workers are not persistent, so spawned workers receive the updated epoch. `num_workers` and `val_num_workers` are configured separately and can both be zero for debugging.
 
-Turn the probability map into instances with connected components, then score against
-**each annotator** and add to the accumulator:
+If `epoch_length` differs from the number of items, the dataset uses balanced shuffled cycles per epoch. Short runs therefore do not repeatedly take only the beginning of the dataset, and oversampling does not always duplicate the same prefix. `drop_last` can still discard a partial batch; experiment budgets should be divisible by the effective batch size. The suite checks that condition.
 
-```python
-import torch, numpy as np
-import metrics as M
+Preprocessing (disc masking, CLAHE, local normalization) happens before augmentation; normalization happens after augmentation. Do not normalize again in the model. `compute_norm_stats` samples no more than `max_images` deterministically from the IDs supplied by its caller; supply only `split['train']`. The CLI and experiment runner do this. The runner stores separate statistics for each preprocessing recipe, keyed by its data/split/catalog/settings, so a transformed-image trial cannot silently reuse plain-image statistics.
 
-acc = M.MetricAccumulator()
-model.eval()
-with torch.no_grad():
-    for batch in val_dl:
-        prob = torch.sigmoid(model(batch["image"].to(device)))[0, 0].cpu().numpy()
-        pred = M.label_components(prob > 0.5)            # 0 = background, 1..N = filaments
-        for k, gt in enumerate(batch["gt_sets"][0].numpy()):
-            acc.add_pair(pred, gt, name=f'{batch["name"][0]}_{k}')
+## Models, checkpoints, and metrics
 
-print(acc.summary())          # PQ_dataset, PQ_mean, PQ_std, SQ, RQ, Dice, IoU, one_to_many, many_to_one
-arrays = acc.filament_arrays()    # per-filament dice / iou, for the histograms
-```
+`models.build_model(cfg['model'])` returns a one-input-channel, one-output-channel U-Net or U-Net++ with raw logits. `losses.build_loss(cfg['loss'])` consumes logits and binary masks. Shared inference applies sigmoid exactly once. ImageNet encoder initialization is used by the chosen baseline; checkpoint reloads do not download it again.
 
-What `summary()` returns:
-- **`PQ_dataset`** pools TP/FP/FN across all images (the Kirillov definition).
-- **`PQ_mean`** and **`PQ_std`** are per image. We don't know which one Kaggle uses, so report both.
-- **`one_to_many`** counts fragmented ground-truth filaments, and **`many_to_one`** counts merged predictions.
-  Person C needs these before and after post-processing.
+`models.load_checkpoint_model(path, device)` returns `(model_in_eval_mode, saved_config, checkpoint_dictionary)`. Use trusted project checkpoints. `best_weights.pt` is the compact handoff; `last.pt` and `best.pt` also retain training states for complete-epoch resume. Keep the full config, split hash, seed, and normalization values with every model. Changing the total planned epochs changes the learning-rate schedule and is not a compatible continuation; `--max-epochs` limits one invocation while preserving that horizon.
 
-Other metric functions:
-- `M.evaluate_observation(pred, gt_sets, reduce="mean" | "max")` returns PQ/SQ/RQ against all annotators of one image.
-- `M.label_components(binary, connectivity=2)` gives 8-connected instances, which is the baseline conversion.
+The [organizer's Self Evaluation Notebook v6](https://www.kaggle.com/code/azimahmadzadeh/self-evaluation-notebook) was inspected through its public source API. Provenance is stored in `results/evaluation_reference.json` (source SHA256 `ae7c9445b4eee2b77b216df5c9772fdf92fda15611e98abd7ef5f02a4e380801`). No external annotations were downloaded or notebook training/evaluation code executed to obtain that reference.
 
-**Assumptions to confirm on the Kaggle Evaluation page** (say so on the slide):
-1. The one-to-many and many-to-one definitions are ours: a prediction counts if at least 50% of it lies
-   inside a ground-truth filament and it covers at least 10% of that filament.
-2. We don't know how Kaggle combines several annotators, which is why both pooled and mean PQ are reported.
-3. An image with no filament and no prediction scores PQ = 1.0.
+| Field or output | Interpretation |
+|---|---|
+| `PQ_dataset`, `SQ_dataset`, `RQ_dataset` | Primary pooled score and its shape/detection components across all annotation sets; matches require IoU **strictly greater than 0.5** |
+| `observation_PQ_mean` and related observation summaries | Equal weight per observation after averaging its annotation-set results; additional diagnostics |
+| `PQ_mean`, `PQ_std` | Variation over annotation-set scores, not variability across training seeds |
+| `filaments.csv`, `filament_scores.npz` | Best-overlap Dice/IoU per ground-truth filament, including zero for a missed filament |
+| `overlap_pairs.csv`, `overlap_scores.npz` | Every positive-overlap prediction/reference pair, matching the reference's overlap-distribution convention |
+| `any_overlap_one_to_many`, `any_overlap_many_to_one` | Fragmentation/merging counts using any positive overlap, as in the reference diagnostics |
+| `custom_one_to_many` | Reference filament split across at least two predictions: each prediction lies at least 50% inside it and covers at least 10% of it |
+| `custom_many_to_one` | Prediction merging at least two reference filaments: it covers at least 50% of each reference, and each contributes at least 10% of the prediction |
+| `annotation_sets.csv`, `observations.csv` | Detailed scores and counts for checking difficult cases and aggregation |
 
-If your local PQ and the Kaggle PQ differ a lot, check these first, then the RLE encoding, before blaming the model.
+An empty prediction produces false negatives for all reference filaments. The custom strict relationships and the official any-overlap relationships answer different questions; keep their labels when plotting. Neither should silently replace the pooled PQ selection metric. Local validation is a different holdout from Kaggle, so numerical equality or a fixed direction of difference is not expected.
 
-## 6. Rules you must not break
+Inference timings in validation separate prediction, connected components, and scoring. They are not the same as full test-pipeline timing. The test exporter measures image reading, preprocessing, transfer/model prediction, components, RLE round-trip verification, and CSV writing; optional probability export is included if enabled, and the cold start is not excluded. Compare timings with the same settings/device and state what was timed. Full optimizer-checkpoint size is also different from compact inference-weight size.
 
-- **Never regenerate or edit `splits/split_v1.json`.** Every number in the project depends on it.
-- **Never tune on the Kaggle leaderboard.** Tune on the validation split only.
-- **Train on the segmentation masks only.** Do not use the `spine`, `bbox` or `category_id`
-  fields. If you want a skeleton or centreline target, compute it with `skimage.morphology.skeletonize`.
-- **Never feed the capture time or instrument code into the model.** They are only for splitting.
-- **Never download the public MAGFiLO version that includes test annotations.**
+`report.py --runs RUN_DIR [RUN_DIR ...] --output OUTPUT_DIR [--examples]` turns saved run/evaluation artifacts into `model_comparison.csv`, `person_b_results.md`, and learning curves. With evaluation score arrays it also plots best-overlap-per-GT distributions, official positive-overlap-pair distributions, and overlap-link counts separately. `--examples` uses saved validation probabilities and shows the three highest/lowest observation-mean-PQ examples under each run's report subdirectory. These are diagnostic illustrations; the comparison table uses pooled `PQ_dataset`. The report rejects tiny-overfit diagnostic runs and never invents missing scores.
 
-## 7. Your tasks, in order
+## Person C handoff
 
-1. **Baseline (E0):** `smp.Unet("resnet34", encoder_weights="imagenet", in_channels=1, classes=1)`,
-   BCE + Dice, AdamW, cosine schedule, mixed precision, 512 crops. Threshold at 0.5, then `M.label_components`.
-2. **Score it** with section 5 and record local PQ. Then hand your weights or predictions to Person C
-   for `submission.csv`, so the Kaggle score gets recorded next to the local one.
-3. **Baseline checkpoint:** the plan wants a scored Kaggle submission early. Do this before any improvement.
-4. **Ablations, one change at a time:** loss (Tversky, focal, boundary, clDice), architecture, resolution
-   (crops vs downsampled), and the data switches (`mask_disc`, `clahe`, `local_norm`, `target: "consensus"`).
-   Log every run, including negative results.
-5. **Seeds:** the final configuration needs at least 3 different seeds, reported as mean ± std.
-6. **Make `train.py` resumable.** Free GPU sessions end without warning, so save a checkpoint every epoch.
-7. **Save the config next to every result.** Copy `configs/data_default.yaml` per experiment
-   and change one line.
+Use `evaluate.py --save-predictions` for validation and `predict.py --save-probabilities DIR` for test data. Each `{observation}.npz` contains:
 
-## 8. Experiment log
+| Key | Format |
+|---|---|
+| `probability` | float32 array, `(2048, 2048)`, values in `[0, 1]`, before thresholding |
+| `instances` | uint32 array, `(2048, 2048)`, 0 background, positive filament IDs |
+| `observation` | Scalar string identifying the source image |
 
-One row per experiment, filled in as it finishes: ID, change from the previous run, seeds, val PQ, SQ,
-RQ, one-to-many, many-to-one, ms per image, Kaggle PQ. The plan's IDs run E0 (baseline) to E7 (compression).
+Keep the associated checkpoint, resolved config, normalization values, split, evaluation summary, and checkpoint hash with those files. Evaluation writes `config.yaml` and a `summary.json` with checkpoint provenance. Submission export writes `submission.summary.json` containing its resolved config, checkpoint path/hash, image coverage, empty-detection list, and timings. The archives themselves do not duplicate all of that metadata.
 
-## 9. Known limits of Person A's work
+For online post-processing, `inference.predict_probability(model, normalized_image, cfg['inference'])` returns probabilities at the input image's original shape. Optional tiles overlap and blend their probabilities **before** one full-image threshold/component operation, avoiding independent instance IDs at tile borders. Person C can replace the basic `probability_to_instances` stage with separation/cleanup and compare on the unchanged validation split. Preserve the probabilities so several post-processing choices can be checked without retraining.
 
-- `data.py` and `metrics.py` were tested on synthetic data, and the cache and split were run on the real
-  data. **The PyTorch loaders have not been run on real data with a GPU**, so if `make_loaders` errors,
-  tell Person A with the traceback and don't work around it silently.
-- The solar-disc detector was checked visually on one real image and numerically on 40, not on all 1154.
-- Overlaps between filaments inside one annotation set are rare (5 sets). The later annotation wins.
-- `consensus_instances` merges touching filaments into one component. This is a deliberate simplification
-  for the consensus ablation, and it makes consensus targets worse for instance separation.
+The basic exporter already writes the required two-column instance CSV and verifies each RLE mask round trip. Reuse `predict.instance_rows` / `write_submission` for replacement instance maps. Do not invent an object for a zero-detection image. Its lack of rows is recorded in the sidecar; actual upload acceptance remains to be confirmed.
 
-## 10. Who to ask
+The Person B training study is complete. Person C should inspect the saved missed/merged/fragmented cases and compare processing changes in separate output directories, retaining the original B artifacts. Record the changed processing settings and evaluate them on the unchanged validation split. All current comparisons used physical batch size 4 without gradient accumulation; equal sample/update-attempt budgets do not imply equal pixels or compute. Person C's compression study must separately report quality, runtime, and deployable size; compact weights that omit optimizer state are not model compression.
 
-- Data, split or metric questions: Person A.
-- Post-processing, instance separation and compression: Person C. They need your predictions saved as
-  probability maps or instance maps.
+The 1024-resolution configuration changes both pixel scale and field of view: it trains on a reduced whole image instead of a 512-pixel full-resolution crop. Equal sample/update budgets therefore do not imply equal processed pixels or compute. Describe it as a comparison of these two practical input strategies, not an isolated test of downsampling alone. Source hashes are saved with runs, but direct training resume does not reject changed source code; finish code changes before comparable research runs and preserve the run metadata.
+
+Use only the provided training segmentation masks for supervision. Do not use annotation `spine`, `bbox`, or `category_id` fields as extra labels; derive any skeleton target from masks. Capture times/instrument codes are for analysis and splitting, not model inputs. Do not obtain the public MAGFiLO release's hidden-test annotations. Select changes using local validation and keep unsuccessful runs in the experiment log.

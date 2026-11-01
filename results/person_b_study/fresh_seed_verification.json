@@ -1,0 +1,70 @@
+{
+  "verified_at_utc": "2026-11-01T02:48:55.679263+00:00",
+  "all_training_complete": true,
+  "research_runs": 17,
+  "research_epochs": 186,
+  "fresh_runs": [
+    {
+      "seed": 43,
+      "run_dir": "runs/final/no_augmentation_seed43",
+      "PQ_dataset": 0.33635888430382976,
+      "SQ_dataset": 0.6755375436856557,
+      "RQ_dataset": 0.4979129397734049,
+      "best_epoch": 18,
+      "epochs_completed": 20,
+      "planned_update_attempts": 4800,
+      "optimizer_steps": 4796,
+      "amp_skipped_steps": 4,
+      "weights_sha256": "fff6cb60752d3277010c28162f33ee049e8fa70cc2332b811b3cd67771c1b265",
+      "history_sha256": "0eadf458ea6c13534dfb48614008d625c452b348f0cde25c3b5bdce181129f40"
+    },
+    {
+      "seed": 44,
+      "run_dir": "runs/final/no_augmentation_seed44",
+      "PQ_dataset": 0.32968557851593944,
+      "SQ_dataset": 0.6723540020092368,
+      "RQ_dataset": 0.4903452311293154,
+      "best_epoch": 20,
+      "epochs_completed": 20,
+      "planned_update_attempts": 4800,
+      "optimizer_steps": 4798,
+      "amp_skipped_steps": 2,
+      "weights_sha256": "043a65fb04801eccd7076c56d1ab7930478ad8448b19dde7d0fffc3e827899f7",
+      "history_sha256": "9c942f6ee61e3f47ecb87266fd7e3938a95abc72d58ab5dc893001fbd7e5c40b"
+    },
+    {
+      "seed": 45,
+      "run_dir": "runs/final/no_augmentation_seed45",
+      "PQ_dataset": 0.3448101728178549,
+      "SQ_dataset": 0.6781707102675563,
+      "RQ_dataset": 0.5084415584415585,
+      "best_epoch": 17,
+      "epochs_completed": 20,
+      "planned_update_attempts": 4800,
+      "optimizer_steps": 4797,
+      "amp_skipped_steps": 3,
+      "weights_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+      "history_sha256": "40a085e45ab15f1b161d46638c4a9b8a0603f84ac079e90dd6e387c91691a99b"
+    }
+  ],
+  "PQ_mean": 0.3369515452125414,
+  "PQ_sample_sd": 0.007579694810077761,
+  "std_definition": "sample standard deviation across three independent fresh training seeds (ddof=1), excluding selection seed42",
+  "representative": {
+    "seed": 45,
+    "run_dir": "runs/final/no_augmentation_seed45",
+    "PQ_dataset": 0.3448101728178549,
+    "SQ_dataset": 0.6781707102675563,
+    "RQ_dataset": 0.5084415584415585,
+    "best_epoch": 17,
+    "epochs_completed": 20,
+    "planned_update_attempts": 4800,
+    "optimizer_steps": 4797,
+    "amp_skipped_steps": 3,
+    "weights_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+    "history_sha256": "40a085e45ab15f1b161d46638c4a9b8a0603f84ac079e90dd6e387c91691a99b"
+  },
+  "representative_rule": "Highest validation PQ among the three fresh-seed best checkpoints; exact ties prefer lower seed.",
+  "checkpoint_reload_verification": "passed: all full-budget and fresh-run checkpoints reproduce saved metrics",
+  "split_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3"
+}

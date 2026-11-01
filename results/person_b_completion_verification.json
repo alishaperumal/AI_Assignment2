@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "completed_at_utc": "2026-11-01T03:28:39.227776+00:00",
+  "scope": "Person A fixes and all authorized local Person B research/deliverables; Person C enhancements and human submission remain separate",
+  "training": {
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "sequential_jobs": true,
+    "research_runs_completed": 17,
+    "epochs_completed": 186,
+    "baseline_original_schedule_completed": true,
+    "screens_completed": 11,
+    "screen_epochs_each": 6,
+    "full_budget_confirmation_candidates": 3,
+    "confirmation_epochs_each": 20,
+    "fresh_seeds": [
+      43,
+      44,
+      45
+    ],
+    "fresh_epochs_each": 20,
+    "selected_configuration": "U-Net/ResNet34, BCE + Dice, no added transforms; foreground-biased random 512-pixel crops remain",
+    "fresh_seed_PQ": [
+      0.33635888430382976,
+      0.32968557851593944,
+      0.3448101728178549
+    ],
+    "PQ_mean": 0.3369515452125414,
+    "PQ_sample_sd_ddof1": 0.007579694810077761,
+    "representative_seed": 45,
+    "representative_best_epoch": 17,
+    "representative_PQ": 0.3448101728178549,
+    "baseline_PQ": 0.3201272840617377,
+    "numerical_source_hashes_unchanged": true
+  },
+  "validation": {
+    "checkpoint_reload_runs": 6,
+    "recorded_metrics_reproduced": true,
+    "absolute_tolerance": 1e-12,
+    "observations": 122,
+    "annotation_sets": 200,
+    "representative_prediction_archives": 122,
+    "evidence": "results/person_b_study/reevaluation_verification.json"
+  },
+  "test_export": {
+    "images_processed": 180,
+    "prediction_archives": 180,
+    "csv_instances": 1831,
+    "zero_detection_images": [
+      "20180507140210Th",
+      "20200310113230Ch",
+      "20211214174010Mh"
+    ],
+    "csv_masks_exactly_verified": true,
+    "kaggle_acceptance_verified": false,
+    "kaggle_score": null,
+    "image_to_csv_seconds_without_archives": 96.53502770001069,
+    "image_to_csv_ms_per_image": 536.3057094445038,
+    "canonical_export_seconds_with_archives": 174.1197884,
+    "timing_scope": "Single pass, warm filesystem cache, no GPU warm-up excluded; includes image read/preprocessing/inference/components/RLE checking/CSV close; excludes model loading"
+  },
+  "package": {
+    "path": "runs/person_b_final",
+    "independent_verification": "results/person_b_package_verification.json",
+    "status": "passed",
+    "total_files_including_manifest": 387,
+    "manifest_entries": 386,
+    "total_bytes_including_manifest": 1598114559,
+    "manifested_bytes": 1598052549,
+    "manifest_sha256": "5e30103dddf8fb9afe68270fcd2274418906db5a9f6a6841c3a349d72fd10ff6",
+    "missing": [],
+    "unexpected": [],
+    "unsafe_paths": [],
+    "hash_or_size_mismatches": [],
+    "transient_progress_excluded": true
+  },
+  "preservation": {
+    "raw_files_checked": 888,
+    "raw_dataset_unchanged": true,
+    "frozen_split_unchanged": true,
+    "original_baseline_checkpoint_and_history_archive_preserved": true,
+    "evidence": "results/person_b_study/data_preservation_verification.json"
+  },
+  "checks": {
+    "pytest_passed": 101,
+    "pytest_failed": 0,
+    "third_party_deprecation_warnings": 53,
+    "pytest_evidence": "results/person_b_study/implementation_checks.json",
+    "presentation_helper_tests_passed": 4,
+    "presentation_slides": 10,
+    "rendered_and_visually_reviewed_slides": 10,
+    "embedded_speaker_notes": 10,
+    "presentation_evidence": "delivery/qa_summary.json",
+    "git_diff_check": "passed",
+    "notebook_saved_error_outputs": 0
+  },
+  "recovery": {
+    "issue": "Windows denied the first final package-directory rename with WinError5 after content verification",
+    "resolution": "Added bounded retries for Windows access/sharing locks, six regression cases, reran the full 101-test suite, rebuilt and independently verified the package",
+    "first_failure_log": "runs/overnight/logs/package_person_b.log",
+    "successful_retry_log": "runs/overnight/logs/package_person_b_retry.log",
+    "training_results_changed": false
+  },
+  "artifacts": {
+    "runs/person_b_final/best_weights.pt": {
+      "bytes": 97895283,
+      "sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377"
+    },
+    "runs/person_b_final/submission.csv": {
+      "bytes": 341859,
+      "sha256": "4a7fbc136f7a8f9aad0a9bbffa328be3b90609d99aa4a73fa8f1f4167be38120"
+    },
+    "runs/person_b_final/manifest.json": {
+      "bytes": 62010,
+      "sha256": "5e30103dddf8fb9afe68270fcd2274418906db5a9f6a6841c3a349d72fd10ff6"
+    },
+    "results/person_b_study/study_report.md": {
+      "bytes": 9736,
+      "sha256": "010d5e617ae23459717be7b4f3e70b1c311036ad7dc087af4c60fe33942f48fc"
+    },
+    "results/person_b_study/interpretation.md": {
+      "bytes": 12718,
+      "sha256": "46904d7fc62c9b3d668b88107b3bb67e67ea1448e69d38c3792a38035c4a3f61"
+    },
+    "results/person_b_study/person_c_handoff.md": {
+      "bytes": 14195,
+      "sha256": "3e991c12032d4f99b34cde4a992cd90d48559da23f78bd5060e10fc6fa875f6a"
+    },
+    "delivery/person_b_results.pptx": {
+      "bytes": 1010058,
+      "sha256": "ef06968167056a16b02b981502a93dc952fc4469809da7263e356e803987cd0a"
+    },
+    "delivery/speaker_notes.md": {
+      "bytes": 13092,
+      "sha256": "35d047ae087b0816915d9607bb879c94b2b38ecf910d6ab6594103a9fed02662"
+    },
+    "delivery/references.md": {
+      "bytes": 2611,
+      "sha256": "c85049505ab97791d0c33028493a9cac4003167dbf676ee0515f55615e30cf61"
+    },
+    "results/person_b_package_verification.json": {
+      "bytes": 3885,
+      "sha256": "a92a95c42cc552a33cc43678b1a2b7392faac3e15f31612fc1b1581e68459f72"
+    },
+    "delivery/qa_summary.json": {
+      "bytes": 5191,
+      "sha256": "7f116eec5fc05100384d08b126e35ea902a2341ff8ee264679d8937627869dc0"
+    }
+  },
+  "remaining_person_b_blockers": [],
+  "remaining_team_and_human_actions": [
+    "Person C: independently evaluate instance separation/post-processing and compression, preserving the B baseline.",
+    "Add presenter names and combine A/B/C slides, optionally transferring into the team template.",
+    "Record each member with the required camera view; check complete video is at most 10 minutes and 50 MB.",
+    "When later authorized, upload the exact chosen CSV to Kaggle, record actual acceptance/score, and retain it for final submission.",
+    "Assemble final assignment ZIP with code, exact submitted CSV, PowerPoint and video; upload through the authorized ClickUP account."
+  ],
+  "uploads": {
+    "kaggle_attempted": false,
+    "clickup_attempted": false
+  },
+  "storage": {
+    "C_free_GiB": 16.94,
+    "external_D_backup_needed": false
+  },
+  "runtime": {
+    "temporary_sleep_guard_released": true,
+    "permanent_power_settings_changed": false,
+    "owned_training_jobs_running": false
+  }
+}

@@ -1,0 +1,7 @@
+extends: baseline.yaml
+run:
+  name: E2_disc_seed42
+  output_dir: runs/E2_disc_seed42
+data:
+  preprocess:
+    mask_disc: true

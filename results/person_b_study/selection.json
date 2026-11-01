@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "status": "training_validation_and_exports_complete",
+  "selected_at_utc": "2026-11-01T01:35:08.583656+00:00",
+  "selected_variant": "no_augmentation",
+  "selection_seed": 42,
+  "selection_rule": "Highest best-checkpoint PQ_dataset at full budget. Exact ties prefer baseline, then fewer parameters, then variant name.",
+  "configuration_decision": "results/person_b_study/configuration_selection.json",
+  "confirmation_runs": [
+    {
+      "variant": "baseline",
+      "seed": 42,
+      "run_dir": "runs/E0_baseline_seed42",
+      "job_sidecar": "runs/overnight/logs/baseline_resume.job.json"
+    },
+    {
+      "variant": "no_augmentation",
+      "seed": 42,
+      "run_dir": "runs/full/no_augmentation_seed42",
+      "experiment_record": "runs/full/records/no_augmentation_seed42.json"
+    },
+    {
+      "variant": "resolution_1024",
+      "seed": 42,
+      "run_dir": "runs/full/resolution_1024_seed42",
+      "experiment_record": "runs/full/records/resolution_1024_seed42.json"
+    }
+  ],
+  "fresh_seed_runs": [
+    {
+      "variant": "no_augmentation",
+      "seed": 43,
+      "run_dir": "runs/final/no_augmentation_seed43",
+      "experiment_record": "runs/final/records/no_augmentation_seed43.json"
+    },
+    {
+      "variant": "no_augmentation",
+      "seed": 44,
+      "run_dir": "runs/final/no_augmentation_seed44",
+      "experiment_record": "runs/final/records/no_augmentation_seed44.json"
+    },
+    {
+      "variant": "no_augmentation",
+      "seed": 45,
+      "run_dir": "runs/final/no_augmentation_seed45",
+      "experiment_record": "runs/final/records/no_augmentation_seed45.json"
+    }
+  ],
+  "baseline_run": "runs/E0_baseline_seed42",
+  "representative_run": "runs/final/no_augmentation_seed45",
+  "representative_checkpoint_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+  "representative_selected_at_utc": "2026-11-01T02:48:55.679263+00:00",
+  "test_summary": "runs/final/no_augmentation_seed45/benchmark/submission.summary.json",
+  "test_predictions_dir": "runs/final/no_augmentation_seed45/test_predictions",
+  "test_examples": [
+    {
+      "observation": "20180507140210Th",
+      "reason": "Recorded zero-detection test image; whether filaments are present is not scored without labels"
+    },
+    {
+      "observation": "20220523234912Lh",
+      "reason": "Median predicted-instance count for instrument Lh; visual coverage only, accuracy unknown"
+    },
+    {
+      "observation": "20130825141154Bh",
+      "reason": "Median predicted-instance count for instrument Bh; visual coverage only, accuracy unknown"
+    }
+  ]
+}

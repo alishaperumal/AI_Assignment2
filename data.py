@@ -5,7 +5,7 @@ Everything between the raw Kaggle download and a PyTorch DataLoader lives here:
 1. parsing file names (capture time + instrument) and the COCO json
 2. decoding polygons -> integer instance maps, cached to disk as 16-bit PNGs
 3. an observation-grouped, contiguous-time-block train/validation split
-4. consensus targets (majority vote over annotators)
+4. consensus targets (union for two sets, majority vote for three)
 5. preprocessing (solar-disc mask, CLAHE, local normalisation) and augmentation
 6. ``FilamentDataset`` (random crops, training) and ``ObservationDataset``
    (whole image + all annotation sets, validation)
@@ -13,7 +13,7 @@ Everything between the raw Kaggle download and a PyTorch DataLoader lives here:
 Command line (run from the repo root)::
 
     python data.py build-cache   # decode polygons, write cache/ + cache/catalog.csv
-    python data.py split         # write splits/split_v1.json
+    python data.py split         # load the frozen split; create only if absent
     python data.py consensus     # optional: cache majority-vote targets
     python data.py stats         # mean / std of training images -> cache/norm_stats.json
 
@@ -218,7 +218,8 @@ def _decode_one(args):
         with open(sp) as f:
             return set_id, json.load(f)
     inst, st = build_instance_map(anns, h, w)
-    cv2.imwrite(str(path), inst)
+    if not cv2.imwrite(str(path), inst):
+        raise OSError(f"could not write instance cache {path}")
     with open(sp, "w") as f:
         json.dump(st, f)
     return set_id, st
@@ -235,7 +236,7 @@ def build_cache(
 
     Resumable (each set also gets a small stats json, so an interrupted run can be
     restarted without losing statistics) and parallel over ``workers`` processes
-    (default: all cores). The catalog (``cache/catalog.csv``) has one row per
+    (default: at most two, to bound memory use). The catalog (``cache/catalog.csv``) has one row per
     annotation set with the parsed capture time / instrument and per-set
     statistics (number of filaments, foreground fraction, tiny/degenerate
     polygons, overlaps). It is the input to the EDA notebook and to the split.
@@ -247,7 +248,9 @@ def build_cache(
     Path(cache_dir, "instances").mkdir(parents=True, exist_ok=True)
     jobs = [(str(im["id"]), by_set.get(im["id"], []), im.get("height", IMG_SIZE),
              im.get("width", IMG_SIZE), str(cache_dir), overwrite) for im in coco["images"]]
-    workers = workers or os.cpu_count() or 1
+    workers = min(2, os.cpu_count() or 1) if workers is None else int(workers)
+    if workers <= 0:
+        raise ValueError("cache workers must be positive")
     stats = {}
     if workers > 1 and len(jobs) > 8:
         with ProcessPoolExecutor(workers) as ex:
@@ -431,19 +434,36 @@ def assert_no_leak(split: dict, catalog: Optional[pd.DataFrame] = None) -> None:
     observation is missing from train/val/dropped. Since the split is keyed by
     observation, all annotation sets of one image are on the same side."""
     tr, va, dr = set(split["train"]), set(split["val"]), set(split.get("dropped", []))
+    for name in ("train", "val", "dropped"):
+        ids = split.get(name, [])
+        if len(ids) != len(set(ids)):
+            raise AssertionError(f"duplicate observations in {name}")
     for a, b, name in ((tr, va, "train/val"), (tr, dr, "train/dropped"), (va, dr, "val/dropped")):
         if a & b:
             raise AssertionError(f"{len(a & b)} observations in both {name}")
     if catalog is not None:
+        unknown = (tr | va | dr) - set(catalog["obs"])
+        if unknown:
+            raise AssertionError(f"{len(unknown)} split observations absent from catalog: {sorted(unknown)[:3]}")
         missing = set(catalog["obs"]) - (tr | va | dr)
         if missing:
             raise AssertionError(f"{len(missing)} observations not assigned: {sorted(missing)[:3]}")
 
 
 def save_split(split: dict, path: Path = SPLIT_PATH) -> None:
-    """Write the split json (commit this file so the whole team uses it)."""
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    """Create a split once; never overwrite an existing experiment partition.
+
+    Saving the same contents is a no-op, preserving the original file bytes.
+    Use a new versioned filename for an intentionally different split.
+    """
+    path = Path(path)
+    assert_no_leak(split)
+    if path.exists():
+        if load_split(path) == split:
+            return
+        raise FileExistsError(f"Refusing to overwrite frozen split {path}; use a new versioned path")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "x") as f:
         json.dump(split, f, indent=1)
 
 
@@ -582,13 +602,15 @@ def preprocess_image(img: np.ndarray, cfg: Optional[dict] = None) -> np.ndarray:
 def normalise(img: np.ndarray, cfg: Optional[dict] = None) -> np.ndarray:
     """Final fixed (x - mean) / std normalisation using constants from the config."""
     c = {**DEFAULT_PREPROCESS, **(cfg or {})}
+    if not np.isfinite(c["mean"]) or not np.isfinite(c["std"]) or c["std"] <= 0:
+        raise ValueError("normalisation mean must be finite and std must be positive and finite")
     return ((img - c["mean"]) / c["std"]).astype(np.float32)
 
 
 # --------------------------------------------------------------------------- #
 # Augmentation
 # --------------------------------------------------------------------------- #
-def build_augmentation(cfg: Optional[dict] = None):
+def build_augmentation(cfg: Optional[dict] = None, seed: int = 42):
     """albumentations pipeline for a crop (image in [0,1], mask as float32).
 
     Flips / 90-degree rotations are safe: the target is filament *shape*, and the
@@ -615,7 +637,7 @@ def build_augmentation(cfg: Optional[dict] = None):
                                              p=c["brightness_contrast"]))
     if c["noise"]: ts.append(A.GaussNoise(std_range=(0.01, 0.06), p=c["noise"]))
     if c["blur"]: ts.append(A.GaussianBlur(blur_limit=(3, 7), p=c["blur"]))
-    return A.Compose(ts)
+    return A.Compose(ts, seed=seed)
 
 
 # --------------------------------------------------------------------------- #
@@ -670,8 +692,8 @@ class FilamentDataset(Dataset):
 
     Each ``__getitem__`` returns a dict with
     ``image`` (1,H,W float32, normalised), ``mask`` (1,H,W float32 binary),
-    ``instances`` (H,W int32, ids local to the crop; for distance-transform /
-    watershed targets) and ``name``.
+    ``instances`` (H,W int32, original instance ids retained in the crop; for
+    distance-transform / watershed targets) and ``name``.
 
     Args:
         items: from :func:`build_items`.
@@ -682,17 +704,60 @@ class FilamentDataset(Dataset):
         preprocess / aug: config dicts (see ``DEFAULT_PREPROCESS``, ``DEFAULT_AUG``).
         epoch_length: samples per epoch (default len(items)); use a larger value
             to draw several crops per image per epoch.
+        seed: controls sampling and augmentation independently of worker order.
+        train_resize: optional square image/target size before crop sampling.
+            Validation targets always retain their original resolution.
+
+    Call ``set_epoch(epoch)`` before creating each epoch's loader iterator. A
+    sample is determined by (seed, epoch, index); repeated visits to that tuple
+    reproduce it, while subsequent epochs provide new crops and augmentations.
     """
 
     def __init__(self, items, crop=512, pos_frac=0.7, augment=True, preprocess=None,
-                 aug=None, cache_dir=CACHE_DIR, epoch_length=None):
+                 aug=None, cache_dir=CACHE_DIR, epoch_length=None, seed=42,
+                 train_resize=None):
         self.items, self.crop, self.pos_frac = list(items), int(crop), float(pos_frac)
+        if not self.items:
+            raise ValueError("training dataset has no items")
+        if self.crop < 0 or not 0 <= self.pos_frac <= 1:
+            raise ValueError("crop must be nonnegative and pos_frac must be between 0 and 1")
         self.pre, self.cache_dir = {**DEFAULT_PREPROCESS, **(preprocess or {})}, Path(cache_dir)
-        self.tf = build_augmentation(aug) if augment else None
-        self.epoch_length = epoch_length or len(self.items)
+        self.seed, self.epoch = int(seed), 0
+        if self.seed < 0:
+            raise ValueError("seed must be nonnegative")
+        self.train_resize = int(train_resize) if train_resize is not None else None
+        if self.train_resize is not None and self.train_resize <= 0:
+            raise ValueError("train_resize must be positive or None")
+        self.tf = build_augmentation(aug, seed=self.seed) if augment else None
+        self.epoch_length = len(self.items) if epoch_length is None else int(epoch_length)
+        if self.epoch_length <= 0:
+            raise ValueError("epoch_length must be positive")
+        self.set_epoch(0)
 
     def __len__(self) -> int:
         return self.epoch_length
+
+    def set_epoch(self, epoch: int) -> None:
+        """Select deterministic samples/crops; shortened epochs cover the full dataset.
+
+        A full pass retains normal item indexing. Other epoch lengths use
+        shuffled cycles: every item appears once per complete cycle, with a
+        random subset for the remainder. This avoids repeatedly training on a
+        chronological prefix when limiting the number of samples per epoch.
+        """
+        if int(epoch) < 0:
+            raise ValueError("epoch must be nonnegative")
+        self.epoch = int(epoch)
+        n_items = len(self.items)
+        if n_items == 0 or self.epoch_length <= 0:
+            raise ValueError("training dataset and epoch_length must be nonempty")
+        if self.epoch_length == n_items:
+            self._item_indices = np.arange(n_items)
+        else:
+            order_rng = np.random.default_rng(np.random.SeedSequence([self.seed, self.epoch, 0x5A17]))
+            cycles = [order_rng.permutation(n_items)
+                      for _ in range(math.ceil(self.epoch_length / n_items))]
+            self._item_indices = np.concatenate(cycles)[:self.epoch_length]
 
     def _crop_origin(self, inst: np.ndarray, rng: np.random.Generator) -> Tuple[int, int]:
         h, w = inst.shape
@@ -707,23 +772,38 @@ class FilamentDataset(Dataset):
         return int(rng.integers(0, h - c + 1)), int(rng.integers(0, w - c + 1))
 
     def __getitem__(self, idx: int) -> dict:
-        item = self.items[idx % len(self.items)]
-        rng = np.random.default_rng()
+        if not 0 <= idx < len(self):
+            raise IndexError(idx)
+        item = self.items[int(self._item_indices[idx])]
+        crop_seed, aug_seed = np.random.SeedSequence(
+            [self.seed, self.epoch, int(idx)]
+        ).generate_state(2)
+        rng = np.random.default_rng(int(crop_seed))
         img = preprocess_image(load_image(item["image"]), self.pre)
         inst = _load_target(item, self.cache_dir)
-        if self.crop and self.crop < min(inst.shape):
+        if img.shape != inst.shape:
+            raise ValueError(f"image/target shape mismatch for {item['obs']}: {img.shape} vs {inst.shape}")
+        if self.train_resize is not None:
+            size = (self.train_resize, self.train_resize)
+            interpolation = cv2.INTER_AREA if self.train_resize < min(img.shape) else cv2.INTER_LINEAR
+            img = cv2.resize(img, size, interpolation=interpolation)
+            inst = cv2.resize(inst, size, interpolation=cv2.INTER_NEAREST)
+        if self.crop > min(inst.shape):
+            raise ValueError(f"crop {self.crop} exceeds image shape {inst.shape}")
+        if self.crop and inst.shape != (self.crop, self.crop):
             y0, x0 = self._crop_origin(inst, rng)
             img = img[y0:y0 + self.crop, x0:x0 + self.crop]
             inst = inst[y0:y0 + self.crop, x0:x0 + self.crop]
         inst_f = inst.astype(np.float32)
         if self.tf is not None:
+            self.tf.set_random_seed(int(aug_seed))
             out = self.tf(image=img, mask=inst_f)
             img, inst_f = out["image"], out["mask"]
         inst = np.rint(inst_f).astype(np.int32)
         x = normalise(img, self.pre)[None]
         return dict(image=torch.from_numpy(np.ascontiguousarray(x)),
                     mask=torch.from_numpy((inst > 0).astype(np.float32)[None]),
-                    instances=torch.from_numpy(inst), name=item["obs"])
+                    instances=torch.from_numpy(np.ascontiguousarray(inst)), name=item["obs"])
 
 
 class ObservationDataset(Dataset):
@@ -731,7 +811,8 @@ class ObservationDataset(Dataset):
 
     ``__getitem__`` returns ``image`` (1,H,W), ``mask`` (1,H,W; majority-vote
     foreground, for a validation loss), ``gt_sets`` (K,H,W int32, one instance map
-    per annotator) and ``name``. K varies between observations, so use
+    per annotator), ``set_ids`` (the corresponding annotation IDs) and ``name``.
+    K varies between observations, so use
     ``batch_size=1`` when K differs.
     """
 
@@ -752,30 +833,88 @@ class ObservationDataset(Dataset):
         cons = consensus_instances(sets) > 0
         return dict(image=torch.from_numpy(normalise(img, self.pre)[None]),
                     mask=torch.from_numpy(cons.astype(np.float32)[None]),
-                    gt_sets=torch.from_numpy(np.stack(sets).astype(np.int32)), name=obs)
+                    gt_sets=torch.from_numpy(np.stack(sets).astype(np.int32)),
+                    set_ids=g["set_id"].tolist(), name=obs)
+
+
+def seed_worker(worker_id: int) -> None:
+    """Picklable Windows worker setup; sample RNGs are controlled by the dataset."""
+    worker_seed = torch.initial_seed() % 2**32
+    random.seed(worker_seed)
+    np.random.seed(worker_seed)
+    cv2.setNumThreads(1)
+
+
+def validate_data_inputs(catalog: pd.DataFrame, split: dict,
+                         img_dir: Path, cache_dir: Path) -> None:
+    """Fail before training if a split, source image, or cached target is missing."""
+    assert_no_leak(split, catalog)
+    if not split["train"] or not split["val"]:
+        raise ValueError("the training and validation partitions must both be nonempty")
+    if catalog["set_id"].duplicated().any():
+        raise ValueError("annotation set IDs must be unique in the catalog")
+    selected = catalog[catalog["obs"].isin(set(split["train"]) | set(split["val"]))]
+    missing_images = [str(Path(img_dir) / fn) for fn in selected["file_name"].unique()
+                      if not (Path(img_dir) / fn).is_file()]
+    missing_masks = [str(instance_path(s, cache_dir)) for s in selected["set_id"]
+                     if not instance_path(s, cache_dir).is_file()]
+    if missing_images or missing_masks:
+        raise FileNotFoundError(
+            f"Data incomplete: {len(missing_images)} source images and "
+            f"{len(missing_masks)} cached masks missing. Examples: "
+            f"{(missing_images + missing_masks)[:3]}. Check data_root and run build-cache."
+        )
 
 
 def make_loaders(cfg: Optional[dict] = None):
-    """Convenience: build (train_loader, val_loader) from the saved split and cache.
+    """Build train/validation loaders, honoring explicit paths and worker settings.
 
-    ``cfg`` keys (all optional): crop, pos_frac, batch_size, num_workers, target
-    ("per_set"|"consensus"), preprocess, aug, augment, epoch_length, seed.
+    Call ``train_loader.dataset.set_epoch(epoch)`` and seed its ``generator``
+    consistently at each epoch boundary. Workers are intentionally nonpersistent
+    so they receive the selected epoch before loading that epoch's samples.
+    Validation always returns original-resolution images and annotation maps.
     """
     from torch.utils.data import DataLoader
 
-    c = dict(crop=512, pos_frac=0.7, batch_size=8, num_workers=4, target="per_set",
-             preprocess={}, aug={}, augment=True, epoch_length=None, seed=42)
+    c = dict(crop=512, pos_frac=0.7, batch_size=8, num_workers=0,
+             val_num_workers=0, target="per_set", preprocess={}, aug={},
+             augment=True, epoch_length=None, seed=42, train_resize=None,
+             data_root=str(DATA_ROOT), cache_dir=str(CACHE_DIR), split=str(SPLIT_PATH),
+             pin_memory=None, drop_last=True)
+    unknown = set(cfg or {}) - set(c)
+    if unknown:
+        raise ValueError(f"unknown data settings: {sorted(unknown)}")
     c.update(cfg or {})
-    cat, split = load_catalog(), load_split()
-    train_items = build_items(cat, split["train"], target=c["target"])
-    train_ds = FilamentDataset(train_items, c["crop"], c["pos_frac"], c["augment"],
-                               c["preprocess"], c["aug"], epoch_length=c["epoch_length"])
-    val_ds = ObservationDataset(cat, split["val"], preprocess=c["preprocess"])
+    for name, allowed in (("preprocess", DEFAULT_PREPROCESS), ("aug", DEFAULT_AUG)):
+        unknown = set(c[name] or {}) - set(allowed)
+        if unknown:
+            raise ValueError(f"unknown {name} settings: {sorted(unknown)}")
+    if c["batch_size"] <= 0 or c["num_workers"] < 0 or c["val_num_workers"] < 0:
+        raise ValueError("batch_size must be positive and worker counts nonnegative")
+    root, cache_dir = Path(c["data_root"]), Path(c["cache_dir"])
+    img_dir = root / "train" / "train_images"
+    cat, split = load_catalog(cache_dir), load_split(Path(c["split"]))
+    validate_data_inputs(cat, split, img_dir, cache_dir)
+    train_items = build_items(cat, split["train"], img_dir, target=c["target"])
+    train_ds = FilamentDataset(
+        train_items, c["crop"], c["pos_frac"], c["augment"], c["preprocess"],
+        c["aug"], cache_dir=cache_dir, epoch_length=c["epoch_length"],
+        seed=c["seed"], train_resize=c["train_resize"],
+    )
+    val_ds = ObservationDataset(cat, split["val"], img_dir,
+                                preprocess=c["preprocess"], cache_dir=cache_dir)
+    if c["drop_last"] and len(train_ds) < c["batch_size"]:
+        raise ValueError("drop_last would produce an empty training loader; reduce batch_size or disable it")
     g = torch.Generator().manual_seed(c["seed"])
-    return (DataLoader(train_ds, batch_size=c["batch_size"], shuffle=True, drop_last=True,
-                       num_workers=c["num_workers"], generator=g, pin_memory=True,
-                       worker_init_fn=lambda w: np.random.seed(c["seed"] + w)),
-            DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2))
+    vg = torch.Generator().manual_seed(c["seed"] + 1)
+    pin = torch.cuda.is_available() if c["pin_memory"] is None else bool(c["pin_memory"])
+    return (
+        DataLoader(train_ds, batch_size=c["batch_size"], shuffle=True,
+                   drop_last=c["drop_last"], num_workers=c["num_workers"],
+                   generator=g, pin_memory=pin, worker_init_fn=seed_worker),
+        DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=c["val_num_workers"],
+                   generator=vg, pin_memory=pin, worker_init_fn=seed_worker),
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -784,8 +923,22 @@ def make_loaders(cfg: Optional[dict] = None):
 def compute_norm_stats(catalog: pd.DataFrame, obs_list: Sequence[str],
                        img_dir: Path = TRAIN_IMG_DIR, max_images: int = 200,
                        cache_dir: Path = CACHE_DIR, preprocess: Optional[dict] = None) -> dict:
-    """Mean/std of (preprocessed) training images, plus foreground pixel fraction."""
-    obs = sorted(set(obs_list))[:: max(1, len(set(obs_list)) // max_images)]
+    """Mean/std of supplied training observations, plus foreground pixel fraction.
+
+    Pass only the frozen split's training IDs. A deterministic sample includes at
+    most ``max_images`` observations; no validation images are added implicitly.
+    """
+    if max_images <= 0:
+        raise ValueError("max_images must be positive")
+    obs = sorted(set(obs_list))
+    if not obs:
+        raise ValueError("cannot compute normalisation statistics on no observations")
+    unknown = set(obs) - set(catalog["obs"])
+    if unknown:
+        raise ValueError(f"normalisation observations absent from catalog: {sorted(unknown)[:3]}")
+    if len(obs) > max_images:
+        indices = np.random.default_rng(0).choice(len(obs), size=max_images, replace=False)
+        obs = [obs[i] for i in sorted(indices)]
     first = catalog[catalog["obs"].isin(obs)].groupby("obs").first()
     s = s2 = n = 0.0
     for fn in first["file_name"]:
@@ -811,24 +964,38 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     ap.add_argument("--block-days", type=float, default=14.0)
     ap.add_argument("--gap-days", type=float, default=1.0)
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--overwrite", action="store_true")
+    ap.add_argument("--data-root", type=Path, default=DATA_ROOT)
+    ap.add_argument("--cache-dir", type=Path, default=CACHE_DIR)
+    ap.add_argument("--split", type=Path, default=SPLIT_PATH)
+    ap.add_argument("--workers", type=int, default=2, help="cache-building processes")
+    ap.add_argument("--max-images", type=int, default=200, help="training images for normalisation stats")
+    ap.add_argument("--overwrite", action="store_true", help="rebuild masks only; never overwrite a split")
     a = ap.parse_args(argv)
+    train_json = a.data_root / "train" / "MAGFiLO_1.0_Annotations_kaggle2026_train.json"
+    train_dir = a.data_root / "train" / "train_images"
+    test_dir = a.data_root / "test" / "test_images"
 
     if a.command in ("build-cache", "all"):
-        build_cache(overwrite=a.overwrite)
+        build_cache(train_json, a.cache_dir, overwrite=a.overwrite, workers=a.workers)
     if a.command in ("split", "all"):
-        cat = load_catalog()
-        tcat = test_catalog() if TEST_IMG_DIR.exists() else None
-        split = make_split(cat, tcat, a.val_frac, a.block_days, a.gap_days, a.seed)
-        save_split(split)
+        cat = load_catalog(a.cache_dir)
+        if a.split.exists():
+            split = load_split(a.split)
+            assert_no_leak(split, cat)
+            print(f"Using existing frozen split {a.split}; creation parameters are not reapplied.")
+        else:
+            tcat = test_catalog(test_dir) if test_dir.exists() else None
+            split = make_split(cat, tcat, a.val_frac, a.block_days, a.gap_days, a.seed)
+            save_split(split, a.split)
         print(json.dumps(split["report"], indent=1))
     if a.command in ("consensus", "all"):
-        build_consensus_cache(load_catalog())
+        build_consensus_cache(load_catalog(a.cache_dir), a.cache_dir)
     if a.command in ("stats", "all"):
-        print(compute_norm_stats(load_catalog(), load_split()["train"]))
+        cat, split = load_catalog(a.cache_dir), load_split(a.split)
+        assert_no_leak(split, cat)
+        print(compute_norm_stats(cat, split["train"], train_dir,
+                                 max_images=a.max_images, cache_dir=a.cache_dir))
 
 
 if __name__ == "__main__":
     main()
-
-    

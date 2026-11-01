@@ -1,0 +1,11 @@
+{
+  "speaker": "Person B",
+  "study_summary": "results/person_b_study/summary.json",
+  "configuration_decision": "results/person_b_study/configuration_selection.json",
+  "study_report_dir": "results/person_b_study",
+  "final_package": "runs/person_b_final",
+  "status": "completed_local_study",
+  "kaggle_score": null,
+  "notes": "All results come from the completed 17-run study. Seed 42 selects the configuration; fresh seeds 43, 44 and 45 supply the final mean and sample standard deviation. No Kaggle upload is authorized."
+}
+

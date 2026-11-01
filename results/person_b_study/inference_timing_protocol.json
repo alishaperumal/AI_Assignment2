@@ -1,0 +1,39 @@
+{
+  "registered_at_utc": "2026-11-01T02:32:49.023172+00:00",
+  "purpose": "Measure deployment cost and the near-tied input-strategy alternative; these measurements do not change the frozen configuration or seed selection rules.",
+  "runs": [
+    {
+      "label": "Original baseline",
+      "run_dir": "runs/E0_baseline_seed42"
+    },
+    {
+      "label": "No added transforms, selection seed",
+      "run_dir": "runs/full/no_augmentation_seed42"
+    },
+    {
+      "label": "1024 whole-image alternative, selection seed",
+      "run_dir": "runs/full/resolution_1024_seed42"
+    },
+    {
+      "label": "Selected representative fresh seed",
+      "run_dir": "resolved from final selection.json representative_run"
+    }
+  ],
+  "device": "cuda on the same RTX 5060 Ti",
+  "test_images": 180,
+  "passes_per_model": 1,
+  "probability_archive_saving": false,
+  "filesystem_cache_policy": "Read all test image files once immediately before each benchmark; do not clear system caches.",
+  "model_setup": "Model loading/setup excluded from image-to-CSV timer; separate job sidecar reports process invocation wall time.",
+  "gpu_warmup": "No explicit warm-up; first image included.",
+  "scope": "Image read/decode, preprocessing, device transfer, inference, connected components, RLE encoding and exact round-trip checks, CSV writing/closing.",
+  "milliseconds_per_image": "1000 * complete end_to_end_seconds / n_images",
+  "sequential": true,
+  "parallel_heavy_tasks": false,
+  "limitations": [
+    "One pass per saved model on this computer is descriptive timing, not a repeated runtime estimate.",
+    "Different outputs require different connected-component/RLE work; the measurement intentionally covers the complete pipeline.",
+    "Test labels are unavailable; no test accuracy is inferred from these timing runs.",
+    "Canonical prediction-archive export has additional storage cost and is reported separately."
+  ]
+}

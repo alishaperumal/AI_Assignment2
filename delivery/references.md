@@ -1,0 +1,13 @@
+# Person B references
+
+- Ronneberger, Fischer & Brox (2015). U-Net. [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597). Encoder-decoder segmentation with skip connections
+- He et al. (2016). Deep Residual Learning for Image Recognition. [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385). ResNet encoder; arXiv preprint appeared in 2015
+- Milletari, Navab & Ahmadi (2016). V-Net. [V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation](https://arxiv.org/abs/1606.04797). Dice-based overlap loss motivation, not a claim that this project uses V-Net
+- Salehi, Erdogmus & Gholipour (2017). Tversky loss. [Tversky loss function for image segmentation using 3D fully convolutional deep networks](https://arxiv.org/abs/1706.05721). Asymmetric false-positive/false-negative overlap weighting
+- Zhou et al. (2018). UNet++. [UNet++: A Nested U-Net Architecture for Medical Image Segmentation](https://arxiv.org/abs/1807.10165). Nested skip-path architecture comparison; the library configuration does not claim every paper feature
+- segmentation_models_pytorch, version 0.6.0. [segmentation_models_pytorch official repository](https://github.com/qubvel-org/segmentation_models.pytorch). Model implementation and pretrained encoder integration
+- Ahmadzadeh et al. (2024). A dataset of manually annotated filaments. [A dataset of manually annotated filaments from H-alpha observations](https://doi.org/10.1038/s41597-024-03876-y). Scientific Data 11, article 1031. Publisher title verified directly; the assignment uses the MAGFiLO dataset name as shorthand. No external annotation release was downloaded.
+- Kirillov et al. (2019). Panoptic Segmentation. [Panoptic Segmentation](https://arxiv.org/abs/1801.00868). Panoptic Quality and its segmentation/recognition components
+- Ahmadzadeh (2026). Self Evaluation Notebook, version 6. [Competition organizer self-evaluation reference](https://www.kaggle.com/code/azimahmadzadeh/self-evaluation-notebook). Pooled annotation-set evaluation, strict IoU > 0.5 matching and overlap diagnostics; source hash in results/evaluation_reference.json
+- Loshchilov & Hutter (2019). Decoupled Weight Decay Regularization. [Decoupled Weight Decay Regularization](https://arxiv.org/abs/1711.05101). AdamW optimizer
+- PyTorch 2.14 documentation. CosineAnnealingLR. [CosineAnnealingLR official documentation](https://docs.pytorch.org/docs/2.14/generated/torch.optim.lr_scheduler.CosineAnnealingLR.html). Cosine schedule without warm restarts, matching the implemented training code

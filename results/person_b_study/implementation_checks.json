@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "verified_at_utc": "2026-11-01T03:24:50.694271+00:00",
+  "command": ".venv/Scripts/python.exe -m pytest -q",
+  "passed": 101,
+  "failed": 0,
+  "warnings": 53,
+  "elapsed_seconds": 30.49,
+  "warning_summary": "pycocotools mask decoding uses a NumPy __array__ signature that triggers a deprecation warning; mask checks passed.",
+  "log": "runs/overnight/logs/final_pytest_after_package_fix.log",
+  "log_sha256": "7e6770eea3a2a116117ce3aebb2aed4b603c89b71d9437cc9b9f2010edebb245",
+  "source_sha256": {
+    "tests/test_config.py": "1c83e1cd8b056fba3e3ed31e4644dbbb074595845a4d9e18f87ea01102b4c62e",
+    "tests/test_data.py": "bfd384566877398a5e320261ea650b45b0273baf7cb4923dcd004d9566e3b278",
+    "tests/test_data_reproducibility.py": "c119ed1433d005419192ae29a8ab99a917afa2464fadcf07deebf3d4e9a5fe83",
+    "tests/test_experiments.py": "d2e8681071f87aa75ca61fa32b246bd6a5305de4595599400f98125b886f9fe5",
+    "tests/test_inference.py": "c462294758a8aa9e4c372a28c2f6fe8726376677c25fc9516445d8eecb5bb8ef",
+    "tests/test_metrics.py": "8dbdf6c4a56a77288b6680af6c632f657b732f3b66c52b501ca8cb403779e156",
+    "tests/test_models_losses.py": "2894321d8a02408e676ab0e901892e915ff4b2ad982eeef05bb857f9ae70b358",
+    "tests/test_package_person_b.py": "82ae95c273600a881a3748c5fa4b6b76c607659c5688c819d30f582d4f5f3d28",
+    "tests/test_report.py": "6f741274fae33c31f0c77689d9267ca7a7aff29fde0741333b9d716f5a45ac78",
+    "tests/test_study_report.py": "176c94d8ea5d9e66a757bd3aa7d872aab86f2a85b6f3ed53e557db5b1bdfae70",
+    "tests/test_submission.py": "938356a9175f79f017fae081e458fa7467fe5453bf4b17e3f0ea4877228d4df3",
+    "tests/test_training.py": "811181cd8c33251a70a7159a39009d97dd13459da3d231029947f80e631ed826",
+    "study_report.py": "3c1db55c4adaad7d27bb1f1632bf99c33bb84d859047b8da0dd926b1212894a5",
+    "package_person_b.py": "71f335c98fb136804a27b1a6f2128c1ef81c60301d7b7230a0246dc3edf3a4af"
+  },
+  "notebook_saved_error_outputs": 0,
+  "git_diff_check": "passed; only Windows LF/CRLF conversion notices",
+  "recovery_note": "A transient Windows access-denied error during final directory rename was addressed with bounded retries restricted to WinError5/32/33; six new cases cover retry, permanent errors and destination races. Core numerical code is unchanged."
+}

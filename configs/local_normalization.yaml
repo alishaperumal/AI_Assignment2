@@ -1,0 +1,7 @@
+extends: baseline.yaml
+run:
+  name: E2_localnorm_seed42
+  output_dir: runs/E2_localnorm_seed42
+data:
+  preprocess:
+    local_norm: true

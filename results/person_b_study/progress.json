@@ -1,0 +1,112 @@
+{
+  "updated_utc": "2026-11-01T03:28:39.227776+00:00",
+  "stage": "complete",
+  "active_job_log": null,
+  "active_tool_session": null,
+  "sequential_gpu_jobs": true,
+  "baseline_last_completed_epoch": 20,
+  "screening": "completed: all eleven six-epoch comparisons",
+  "confirmation": "completed: baseline and both promoted alternatives each trained for 20 epochs",
+  "fresh_seeds": "completed: three fresh 20-epoch runs",
+  "final_deliverables": "complete: reports, ten-slide deck with notes/references, verified 387-file transfer package",
+  "free_disk_GiB": 16.94,
+  "uploads": "prohibited by user; no uploads attempted",
+  "sleep_guard_session": 68492,
+  "sleep_guard_pid": 27308,
+  "sleep_guard_stop_file": "runs/overnight/study_running.flag",
+  "completed_screens": [
+    {
+      "variant": "resolution_1024",
+      "PQ": 0.3103855108406875
+    },
+    {
+      "variant": "no_augmentation",
+      "PQ": 0.28560185004381283
+    },
+    {
+      "variant": "unetplusplus",
+      "PQ": 0.27909149977876707
+    },
+    {
+      "variant": "disc_mask",
+      "PQ": 0.27830816878263837
+    },
+    {
+      "variant": "clahe",
+      "PQ": 0.2767732784572557
+    },
+    {
+      "variant": "consensus",
+      "PQ": 0.27229130154907655
+    },
+    {
+      "variant": "local_normalization",
+      "PQ": 0.25973530195994987
+    },
+    {
+      "variant": "baseline",
+      "PQ": 0.25536091601348765
+    },
+    {
+      "variant": "lr_low",
+      "PQ": 0.2464783052075425
+    },
+    {
+      "variant": "lr_high",
+      "PQ": 0.2423973132988994
+    },
+    {
+      "variant": "tversky",
+      "PQ": 0.24159265315698827
+    }
+  ],
+  "active_screen": [],
+  "failed_screens": [],
+  "active_confirmation": [],
+  "completed_confirmation": [
+    {
+      "variant": "no_augmentation",
+      "PQ": 0.3380807049443372
+    },
+    {
+      "variant": "resolution_1024",
+      "PQ": 0.33745129254063183
+    },
+    {
+      "variant": "baseline",
+      "PQ": 0.3201272840617377
+    }
+  ],
+  "failed_confirmation": [],
+  "selected_variant": "no_augmentation",
+  "active_fresh_seed": [],
+  "completed_fresh_seeds": [
+    {
+      "seed": 43,
+      "PQ": 0.33635888430382976
+    },
+    {
+      "seed": 44,
+      "PQ": 0.32968557851593944
+    },
+    {
+      "seed": 45,
+      "PQ": 0.3448101728178549
+    }
+  ],
+  "failed_fresh_seeds": [],
+  "all_training_complete": true,
+  "representative_seed": 45,
+  "evaluation": "completed: six checkpoints reloaded, all saved validation metrics reproduced",
+  "PQ_mean": 0.3369515452125414,
+  "PQ_sample_sd": 0.007579694810077761,
+  "validation_predictions": "122 baseline and 122 representative archives saved",
+  "test_export": "completed:180 images,1831 instances,three zero-detection images,all RLE round trips passed",
+  "test_predictions": "180 representative probability/instance archives saved",
+  "inference_benchmarks": "completed: four sequential fixed-procedure passes",
+  "final_tests": "101 passed; 53 third-party deprecation warnings",
+  "raw_data_and_split": "independently verified unchanged",
+  "sleep_guard_active": false,
+  "package_verification": "passed",
+  "completion_record": "results/person_b_completion_verification.json"
+}

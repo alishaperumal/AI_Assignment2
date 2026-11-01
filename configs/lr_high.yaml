@@ -1,0 +1,6 @@
+extends: baseline.yaml
+run:
+  name: H2_lr1e3_seed42
+  output_dir: runs/H2_lr1e3_seed42
+train:
+  learning_rate: 0.001

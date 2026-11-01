@@ -1,0 +1,14 @@
+{
+  "run_dir": "runs\\E0_baseline_seed42",
+  "epochs": 20,
+  "best_epoch": 20,
+  "PQ_dataset": 0.3201272840617377,
+  "SQ_dataset": 0.6750841121087893,
+  "RQ_dataset": 0.4742035522977164,
+  "preserved_initial_history": true,
+  "archive_hashes_verified": true,
+  "planned_update_attempts": 4800,
+  "optimizer_steps": 4797,
+  "amp_skipped_steps": 3,
+  "free_disk_GiB": 29.76
+}

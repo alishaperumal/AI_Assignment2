@@ -1,0 +1,6 @@
+extends: baseline.yaml
+run:
+  name: E2_noaug_seed42
+  output_dir: runs/E2_noaug_seed42
+data:
+  augment: false

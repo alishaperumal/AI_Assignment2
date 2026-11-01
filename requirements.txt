@@ -1,14 +1,18 @@
-numpy
-scipy
-pandas
-matplotlib
-opencv-python
-scikit-image
-pycocotools
-albumentations>=2.0
-segmentation_models_pytorch
-torch
-pyyaml
-jupyter
-nbformat
-pytest
+# Tested on Python 3.14.7 / Windows / CUDA 13.0. Install a GPU-compatible
+# torch + torchvision first (see README), then install this file.
+# +cu130 local versions satisfy these public version pins.
+torch==2.14.0
+torchvision==0.29.0
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.6
+matplotlib==3.11.2
+opencv-python-headless==5.0.0.93
+scikit-image==0.26.0
+pycocotools==2.0.11
+albumentations==2.0.8
+segmentation-models-pytorch==0.6.0
+timm==1.0.30
+pyyaml==6.0.3
+nbformat==5.11.1
+pytest==9.1.1
