@@ -8,6 +8,8 @@ The assignment specification is `COS711-A2.pdf`; the division of work is in `COS
 
 ## Person C: post-processing, compression and final submission
 
+**Score-improvement round (after Kaggle 0.32):** `improve.py` trains preprocessing variants (CLAHE + disc mask, local normalisation + disc mask) and scores/exports probability-averaging ensembles. Best validation result: teacher + distilled ResNet18 ensemble, PQ 0.4143 vs 0.4031 submitted (not yet confirmed on Kaggle). See [results/improvements/README.md](results/improvements/README.md).
+
 Full results, tables and figures: [results/person_c/person_c_results.md](results/person_c/person_c_results.md).
 
 * **Post-processing** (`postprocess.py`, configured by the `postprocess` section of any config; defaults reproduce the baseline). The selected rule bridges fragments up to 16 px apart into one instance (no pixels added) and removes regions under 320 px, raising pooled validation PQ of the seed-45 model from **0.3448 to 0.4034** on the same probabilities. It was chosen from declared searches scored by `offline_eval.py`, which first reproduced Person B's result exactly; split-half and bootstrap checks are recorded.

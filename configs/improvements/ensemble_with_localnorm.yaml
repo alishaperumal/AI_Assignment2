@@ -1,0 +1,19 @@
+# Third search: adds the local-normalisation model (localnorm47). Candidate 0 is
+# the submitted configuration (pruned 30% FP16, t=0.5, bridge 8, min area 320).
+ensembles:
+  - name: submitted_pruned30
+    members: [pruned30]
+  - name: localnorm47
+    members: [localnorm47]
+  - name: teacher+kd18
+    members: [teacher, kd18]
+  - name: teacher+kd18+localnorm47
+    members: [teacher, kd18, localnorm47]
+  - name: teacher+kd18+clahe46+localnorm47
+    members: [teacher, kd18, clahe46, localnorm47]
+  - name: all_six
+    members: [teacher, kd18, label18, pruned30, clahe46, localnorm47]
+postprocess:
+  - threshold: [0.5, 0.45]
+    bridge_radius: 8
+    min_area: [320, 240]

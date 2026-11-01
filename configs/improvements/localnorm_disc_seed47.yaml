@@ -1,0 +1,19 @@
+# Improvement run 2: local intensity normalisation (removes the slow brightness
+# fall-off towards the solar edge and evens out local contrast) plus zeroing
+# outside the solar disc. Same recipe otherwise; statistics from training images only.
+extends: ../person_c/seed45_selected.yaml
+run:
+  name: localnorm_disc_noaug_seed47
+  output_dir: runs/improvements/localnorm_disc_seed47
+seed: 47
+data:
+  seed: 47
+  num_workers: 6
+  preprocess:
+    local_norm: true
+    mask_disc: true
+train:
+  validate_every: 2
+postprocess:
+  bridge_radius: 8
+  min_area: 320

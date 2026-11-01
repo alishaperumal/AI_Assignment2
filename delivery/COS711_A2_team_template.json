@@ -1,0 +1,198 @@
+{
+  "template": "COS711_A2_Presentation_Template.pptx",
+  "template_sha256": "642b8209da55e11bd37a299ae67bb7706f115c4e7f924afa00c7eea2c6b7572b",
+  "output": "COS711_A2_team_template.pptx",
+  "slides": 14,
+  "target_narration_seconds": 510,
+  "kaggle_result": "PLACEHOLDER: team must add measured result and screenshot",
+  "final_validation_PQ": 0.40313971837052637,
+  "final_csv_sha256": "1b08bcb078b2a44ad9e64545490c875b5c0fb01db87a1b34c2570825a5e9fb2f",
+  "test_illustrations": [
+    {
+      "observation": "20120622063154Uh",
+      "filaments": 8
+    },
+    {
+      "observation": "20131027185354Bh",
+      "filaments": 12
+    }
+  ],
+  "script": [
+    {
+      "slide": 1,
+      "owner": "All members",
+      "seconds": 15,
+      "title": "Title",
+      "narration": "We built a deep-learning system that identifies the pixels belonging to each individual solar filament. Filaments are clouds of solar material that appear as dark structures in these telescope images. Replace the names and student numbers before recording.",
+      "sources": [
+        "COS711-A2.pdf"
+      ]
+    },
+    {
+      "slide": 2,
+      "owner": "All members",
+      "seconds": 25,
+      "title": "Team and Responsibilities",
+      "narration": "Each member introduces themselves and their responsibility. A mask is a pixel-level marking of an object. Instance segmentation means producing a separate mask for each individual object. Each presenter must be visible, head and shoulders, in the upper-right corner.",
+      "sources": [
+        "HANDOFF.md",
+        "COS711-A2.pdf"
+      ]
+    },
+    {
+      "slide": 3,
+      "owner": "Person A",
+      "seconds": 40,
+      "title": "Dataset Preparation",
+      "narration": "We analysed the supplied Kaggle images and labels. An annotation is a human marking. Multiple annotation sets can describe the same observation. Filaments cover less than one percent of pixels; this is class imbalance, meaning one category is much more common than the other. A model predicting only background could get most pixels right while finding no filaments. We therefore evaluate individual objects and shapes. We did not obtain external labels for the test images.",
+      "sources": [
+        "results/eda_summary.json",
+        "figures/eda_imbalance.png"
+      ]
+    },
+    {
+      "slide": 4,
+      "owner": "Person A",
+      "seconds": 45,
+      "title": "Dataset Preparation: Our Choices",
+      "narration": "The training set teaches the model; validation is held back for comparing choices. Leakage means allowing information from evaluation examples to influence learning in an unfair way. We group related observations and keep all annotation sets together. Instruments still occur on both sides, so this is not an unseen-instrument test. Normalisation rescales pixel brightness using training-only statistics. Preprocessing changes inputs before prediction; augmentation creates varied training examples. The selected no-augmentation recipe disables added flips, rotations, brightness, noise and blur, but still samples random patches.",
+      "sources": [
+        "splits/split_v1.json",
+        "results/person_b_study/methodology.md",
+        "results/eda_summary.json"
+      ]
+    },
+    {
+      "slide": 5,
+      "owner": "Person B",
+      "seconds": 45,
+      "title": "Experimental Setup and Methodology",
+      "narration": "U-Net is a network that combines broad image patterns with fine spatial detail. The ResNet34 encoder is its feature-extracting component, starting from ImageNet pretrained weights. Loss is a number measuring prediction error. Binary cross entropy penalises wrong pixel labels; Dice rewards overlap. AdamW adjusts the learned weights, and the learning rate controls the update size. The cosine schedule gradually reduces that rate. An epoch here contains 960 sampled examples, not a pass over every unique image. Mixed precision uses smaller numerical formats for some calculations to reduce memory. GPUs accelerate this computation.",
+      "sources": [
+        "results/person_b_study/methodology.md",
+        "results/person_c/person_c_results.md"
+      ]
+    },
+    {
+      "slide": 6,
+      "owner": "Person B",
+      "seconds": 45,
+      "title": "Methodology: Tuning and Evaluation",
+      "narration": "A random seed controls random choices during training. We separated recipe selection from three fresh runs. IoU is shared mask area divided by the area covered by either mask. PQ equals the sum of matched IoUs divided by matched objects plus half the extra and missed objects. Our evaluator follows the organiser's reference and keeps overlapping annotation layers. The fixed sample budgets improve comparability, but the 1024 whole-image recipe also changes field of view and computing cost. Voted labels change observation weighting. A short screen may favour fast learners; it does not prove every rejected recipe would lose after longer training.",
+      "sources": [
+        "results/person_b_study/protocol.json",
+        "results/person_b_study/methodology.md",
+        "results/evaluation_reference.json"
+      ]
+    },
+    {
+      "slide": 7,
+      "owner": "Person B / C",
+      "seconds": 55,
+      "title": "Results",
+      "narration": "The original full-budget baseline scored 0.3201. The two alternatives nearly tied; we do not claim statistical superiority from that difference. Across fresh seeds 43, 44 and 45, the selected recipe averaged 0.3370 with sample standard deviation 0.0076. Standard deviation describes variation across runs. Seed 45 is the representative checkpoint, not the mean. Person C's cleanup raises its score to 0.4034, and the final smaller model scores 0.4031. Fill the Kaggle score, rank, date and screenshot after an actual submission; they are not measured here. Local validation and Kaggle evaluate different images.",
+      "sources": [
+        "results/person_b_study/confirmation.csv",
+        "results/person_b_study/fresh_seed_summary.csv",
+        "results/person_c/summary.json",
+        "results/person_c/final_submission.json"
+      ]
+    },
+    {
+      "slide": 8,
+      "owner": "Person C",
+      "seconds": 45,
+      "title": "Results: Example Predictions",
+      "narration": "These are actual labelled validation crops, selected by the largest improvement and largest decrease in observation PQ after cleanup. They are not rankings of hidden test accuracy. The score is averaged over all annotation sets for the complete observation; the pictured reference is the first set and the view is a crop. In the favourable case, removing extra regions reduces penalties. In the unfavourable case, the size rule also removes small structures marked by a human. Red highlights removed pixels; colours identify separate objects and have no physical meaning. These illustrate the teacher's cleanup, not final-model masks.",
+      "sources": [
+        "results/person_c/summary.json: examples",
+        "figures/person_c/pp_examples_slide.png"
+      ]
+    },
+    {
+      "slide": 9,
+      "owner": "Person C",
+      "seconds": 40,
+      "title": "Results: Final Test Predictions",
+      "narration": "Left: original grayscale input. Right: the final pruned FP16 model's submitted masks overlaid in colour. The two fixed images are 20120622063154Uh, 20131027185354Bh. They were chosen to illustrate different scenes, not ranked by test accuracy. Masks are decoded directly from the hash-checked final CSV, so these are the submitted predictions rather than the teacher's predictions. Some elongated dark structures are captured, but visual plausibility cannot establish correctness. Faint edges, background texture and adjacent structures remain risks; no test labels are used.",
+      "sources": [
+        "runs/person_c/final/submission.csv",
+        "results/person_c/final_submission.json"
+      ]
+    },
+    {
+      "slide": 10,
+      "owner": "Person C",
+      "seconds": 55,
+      "title": "Segmentation Enhancement",
+      "narration": "Post-processing changes the output after the network predicts. We investigated extra blobs and fragmented filaments using saved scores, first exactly reproducing Person B's results. Of unmatched regions, 48 percent were below 320 pixels, compared with about 4 percent of matched regions. We group nearby fragments under one ID without filling their gap, then discard small groups. This roughly halves extra detections. Counts are pooled over annotation sets, and fragmentation/merging are our recorded overlap diagnostics. Bootstrap intervals come from repeatedly resampling observations; they support the gain, but do not remove every risk from validation tuning. Held-out-half checks also improved. Watershed splitting, hole filling and changing the cutoff alone offered no meaningful benefit. Flip averaging means predicting flipped copies too; it cost about 3.8 times model inference and was not adopted.",
+      "sources": [
+        "results/person_c/postprocess_stage1.csv",
+        "results/person_c/postprocess_stage2.csv",
+        "results/person_c/summary.json",
+        "results/person_c/person_c_results.md"
+      ]
+    },
+    {
+      "slide": 11,
+      "owner": "Person C",
+      "seconds": 60,
+      "title": "Segmentation Enhancement: Compression",
+      "narration": "Parameters are the model's learned numbers. Pruning removes selected internal feature channels and fine-tuning trains the remaining network again. FP16 stores weights using 16-bit numbers. Distillation trains a smaller student from both labels and teacher predictions; our matched label-only control isolates that teaching effect for this run. Fifty percent channel pruning lost quality, so we transparently added a milder thirty percent follow-up and its FP16 composition. The unchanged selection rule chooses the smallest eligible GPU model within 0.002 PQ of the teacher. The final file is 22.9 MiB (one MiB is 1,048,576 bytes), compared with 93.4 MiB, and takes 475 milliseconds per image end-to-end on the RTX 3070. This includes reading, preparation, model execution, cleanup, mask encoding checks and CSV. Training times use different GPUs and are not a hardware-controlled comparison. INT8 stores quantised values in eight bits; its CPU deployment is a separate timing comparison on twenty test images, with calibration using training images only. The final CSV contains 1,421 filaments for 180 images, including three without detections; every encoded mask was independently checked.",
+      "sources": [
+        "results/person_c/compression.csv",
+        "results/person_c/final_selection_rule.json",
+        "results/person_c/final_submission.json",
+        "results/person_c/final_submission_check.json"
+      ]
+    },
+    {
+      "slide": 12,
+      "owner": "Person C / all",
+      "seconds": 40,
+      "title": "Conclusions",
+      "narration": "The main demonstrated improvement came from understanding object-level errors. File-size reduction did not automatically make the entire pipeline faster, because processing outside the network also matters. The final compressed result is one run and the hidden-test score still needs to be added. If repeating the project, we would allocate time for repeated final-model runs and for methods that learn thin boundaries and continuity. We would test mild contrast enhancement during both training and prediction rather than assuming prettier images improve scores. Future ideas are proposals, not measured results. Before submission add names, Kaggle evidence, and record all presenters within ten minutes and fifty MB.",
+      "sources": [
+        "results/person_c/person_c_results.md",
+        "COS711-A2.pdf"
+      ]
+    },
+    {
+      "slide": 13,
+      "owner": "Reference only",
+      "seconds": 0,
+      "title": "Bibliography",
+      "narration": "References are provided for completeness; no narration required.",
+      "sources": [
+        "https://doi.org/10.1038/s41597-024-03876-y",
+        "https://arxiv.org/abs/1801.00868",
+        "https://www.kaggle.com/code/azimahmadzadeh/self-evaluation-notebook",
+        "https://arxiv.org/abs/1505.04597",
+        "https://arxiv.org/abs/1512.03385",
+        "https://arxiv.org/abs/1711.05101",
+        "https://www.kaggle.com/competitions/filament-segmentation-2026",
+        "https://arxiv.org/abs/1503.02531",
+        "https://arxiv.org/abs/2301.12900",
+        "https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html"
+      ]
+    },
+    {
+      "slide": 14,
+      "owner": "Reference only",
+      "seconds": 0,
+      "title": "Bibliography: Methods and Tools",
+      "narration": "References are provided for completeness; no narration required.",
+      "sources": [
+        "https://arxiv.org/abs/1606.04797",
+        "https://arxiv.org/abs/1706.05721",
+        "https://arxiv.org/abs/1807.10165",
+        "https://github.com/qubvel-org/segmentation_models.pytorch",
+        "https://docs.pytorch.org/docs/2.14/generated/torch.optim.lr_scheduler.CosineAnnealingLR.html",
+        "https://www.kaggle.com/competitions/filament-segmentation-2026",
+        "https://arxiv.org/abs/1503.02531",
+        "https://arxiv.org/abs/2301.12900",
+        "https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html"
+      ]
+    }
+  ]
+}

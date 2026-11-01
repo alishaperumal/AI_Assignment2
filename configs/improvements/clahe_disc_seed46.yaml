@@ -1,0 +1,21 @@
+# Improvement run 1: preprocessing on top of the selected no-augmentation recipe.
+# CLAHE (local contrast enhancement) and zeroing everything outside the solar
+# disc are applied identically in training, validation and test prediction.
+# Normalisation mean/std are recomputed from training images only by improve.py.
+# Checkpoints are selected with the deployed post-processing (bridge 8, min area 320).
+extends: ../person_c/seed45_selected.yaml
+run:
+  name: clahe_disc_noaug_seed46
+  output_dir: runs/improvements/clahe_disc_seed46
+seed: 46
+data:
+  seed: 46
+  num_workers: 6
+  preprocess:
+    clahe: true
+    mask_disc: true
+train:
+  validate_every: 2
+postprocess:
+  bridge_radius: 8
+  min_area: 320

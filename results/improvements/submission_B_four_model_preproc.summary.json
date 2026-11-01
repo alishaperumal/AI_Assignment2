@@ -1,0 +1,44 @@
+{
+  "n_images": 180,
+  "n_filaments": 1418,
+  "zero_detection_images": [
+    "20180507140210Th",
+    "20200310113230Ch",
+    "20211214174010Mh"
+  ],
+  "rle_round_trip_verified": true,
+  "kaggle_acceptance_verified": false,
+  "empty_image_policy": "omit rows; official reference counts GT as false negatives; upload acceptance unverified",
+  "models": [
+    "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\person_b_final\\best_weights.pt",
+    "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\person_c\\compression\\kd_resnet18\\best_weights.pt",
+    "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\improvements\\clahe_disc_seed46\\best_weights.pt",
+    "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\improvements\\localnorm_disc_seed47\\best_weights.pt"
+  ],
+  "weights": [
+    0.25,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "tta": false,
+  "threshold": 0.5,
+  "postprocess": {
+    "seed_threshold": null,
+    "min_area": 240,
+    "close_radius": 0,
+    "fill_holes": false,
+    "bridge_radius": 8,
+    "split_threshold": null,
+    "split_min_core_area": 50,
+    "connectivity": 2
+  },
+  "end_to_end_seconds": 154.7640469999751,
+  "end_to_end_ms_per_image": 859.7067088878248,
+  "ms_per_image_excluding_first": 859.5571357531827,
+  "timing_scope": "read + per-model preprocessing + inference + averaging + post-processing + RLE round-trip + CSV; model loading excluded; batch size 1",
+  "device": "NVIDIA GeForce RTX 3070",
+  "csv_sha256": "f4ce783fef1f1ee8f58a71a23a71f570035caef70349e2d62e748fffadbb5347",
+  "parameters": 87612228,
+  "model_file_bytes": 351080908
+}
