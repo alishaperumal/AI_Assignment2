@@ -18,8 +18,9 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from inference import predict_probability, probability_to_instances
+from inference import predict_probability
 from metrics import MetricAccumulator, evaluate_pair, evaluate_mask_layers
+from postprocess import probability_to_instances_pp, resolve_postprocess
 
 
 def file_sha256(path) -> str:
@@ -77,6 +78,64 @@ def _write_rows(path: Path, rows: list[dict], fieldnames=None) -> None:
         writer.writerows(rows)
 
 
+def scoring_options(ec: dict) -> dict:
+    """Matching and relation settings shared by checkpoint and offline scoring."""
+    iou_threshold = float(ec.get("iou_threshold", 0.5))
+    if not 0.5 <= iou_threshold <= 1:
+        raise ValueError("instance-matching threshold must be in [0.5,1]")
+    return dict(iou_thr=iou_threshold, tau=float(ec.get("relation_tau", 0.1)),
+                own=float(ec.get("relation_own", 0.5)))
+
+
+def score_observation(pred, gt_sets, set_ids, name, raw_annotations, options) -> list:
+    """Score one instance map against every annotation set of one observation.
+
+    ``set_ids`` aligns with ``gt_sets`` (plain strings or default-collated
+    one-element tuples). Sets listed in ``raw_annotations`` are scored against
+    their original binary layers, preserving overlapping/empty annotations that
+    the integer cache cannot represent. Returns ``[(set_id, result, used_layers)]``.
+    """
+    if len(gt_sets) == 0:
+        raise ValueError(f"no annotation sets for observation {name}")
+    if raw_annotations and set_ids is None:
+        raise ValueError("validation batch needs set_ids for lossless overlapping-annotation scoring")
+    scored = []
+    for k, gt in enumerate(gt_sets):
+        sid = (set_ids[k][0] if isinstance(set_ids[k], (tuple, list)) else str(set_ids[k])) if set_ids else f"{name}_set{k}"
+        if sid in raw_annotations:
+            import data as D
+            layers = (D.decode_annotation(seg, *pred.shape)[0] for seg in raw_annotations[sid])
+            scored.append((sid, evaluate_mask_layers(pred, layers, **options), True))
+        else:
+            scored.append((sid, evaluate_pair(pred, gt, **options), False))
+    return scored
+
+
+def detail_rows(name: str, sid: str, result: dict):
+    """Best-overlap rows per reference filament and every positive-overlap pair."""
+    fil = result["filament"]
+    filaments = [dict(observation=name, annotation_set=sid, gt_id=int(gid),
+                      iou=float(iou), dice=float(dice), gt_area=int(area))
+                 for gid, iou, dice, area in zip(fil["gt_id"], fil["iou"], fil["dice"], fil["gt_area"])]
+    pairs = result["overlap_pairs"]
+    overlaps = [dict(observation=name, annotation_set=sid, gt_id=int(gid), pred_id=int(pid),
+                     iou=float(iou), dice=float(dice))
+                for gid, pid, iou, dice in zip(pairs["gt_id"], pairs["pred_id"], pairs["iou"], pairs["dice"])]
+    return filaments, overlaps
+
+
+def write_details(out: Path, acc: MetricAccumulator, filament_rows, overlap_rows) -> None:
+    """Write detailed per-set/observation/filament tables and score arrays."""
+    _write_rows(out / "annotation_sets.csv", acc.per_image)
+    _write_rows(out / "observations.csv", acc.observation_rows())
+    _write_rows(out / "filaments.csv", filament_rows,
+                ["observation", "annotation_set", "gt_id", "iou", "dice", "gt_area"])
+    _write_rows(out / "overlap_pairs.csv", overlap_rows,
+                ["observation", "annotation_set", "gt_id", "pred_id", "iou", "dice"])
+    np.savez_compressed(out / "filament_scores.npz", **acc.filament_arrays())
+    np.savez_compressed(out / "overlap_scores.npz", **acc.overlap_arrays())
+
+
 def evaluate_model(model, val_loader, device, cfg: dict, output_dir=None,
                    save_predictions: bool = False) -> dict:
     """Return scalar scores; optionally export detailed results and predictions.
@@ -89,11 +148,11 @@ def evaluate_model(model, val_loader, device, cfg: dict, output_dir=None,
     """
     device = resolve_device(device)
     ec = cfg.get("evaluation", {})
-    threshold, iou_threshold = float(ec.get("threshold", 0.5)), float(ec.get("iou_threshold", 0.5))
+    threshold = float(ec.get("threshold", 0.5))
     if not 0 < threshold < 1:
         raise ValueError("foreground threshold must lie strictly between 0 and 1")
-    if not 0.5 <= iou_threshold <= 1:
-        raise ValueError("instance-matching threshold must be in [0.5,1]")
+    options = scoring_options(ec)
+    postprocess = resolve_postprocess(cfg.get("postprocess"), threshold)
     out = Path(output_dir) if output_dir is not None else None
     if save_predictions and out is None:
         raise ValueError("output_dir is required when saving predictions")
@@ -123,36 +182,18 @@ def evaluate_model(model, val_loader, device, cfg: dict, output_dir=None,
         probability = predict_probability(model, image, cfg.get("inference", {}))[0, 0].cpu().numpy()
         prediction_seconds += time.perf_counter() - before
         before = time.perf_counter()
-        pred = probability_to_instances(probability, threshold)
+        pred = probability_to_instances_pp(probability, threshold, postprocess)
         postprocess_seconds += time.perf_counter() - before
         before = time.perf_counter()
         sets = batch["gt_sets"][0].numpy()
-        if len(sets) == 0:
-            raise ValueError(f"no annotation sets for observation {name}")
-        set_ids = batch.get("set_ids")
-        if raw_annotations and set_ids is None:
-            raise ValueError("validation batch needs set_ids for lossless overlapping-annotation scoring")
-        for k, gt in enumerate(sets):
-            sid = (set_ids[k][0] if isinstance(set_ids[k], (tuple, list)) else str(set_ids[k])) if set_ids else f"{name}_set{k}"
-            options = dict(iou_thr=iou_threshold, tau=float(ec.get("relation_tau", 0.1)),
-                           own=float(ec.get("relation_own", 0.5)))
-            if sid in raw_annotations:
-                import data as D
-                layers = (D.decode_annotation(seg, *pred.shape)[0] for seg in raw_annotations[sid])
-                result = evaluate_mask_layers(pred, layers, **options)
-                n_raw_sets += 1
-            else:
-                result = evaluate_pair(pred, gt, **options)
+        for sid, result, used_layers in score_observation(pred, sets, batch.get("set_ids"), name,
+                                                          raw_annotations, options):
+            n_raw_sets += int(used_layers)
             acc.add(result, name=sid, observation=name)
             if out is not None:
-                fil = result["filament"]
-                filament_rows.extend(dict(observation=name, annotation_set=sid, gt_id=int(gid),
-                                          iou=float(iou), dice=float(dice), gt_area=int(area))
-                                     for gid, iou, dice, area in zip(fil["gt_id"], fil["iou"], fil["dice"], fil["gt_area"]))
-                pairs = result["overlap_pairs"]
-                overlap_rows.extend(dict(observation=name, annotation_set=sid, gt_id=int(gid), pred_id=int(pid),
-                                         iou=float(iou), dice=float(dice))
-                                    for gid, pid, iou, dice in zip(pairs["gt_id"], pairs["pred_id"], pairs["iou"], pairs["dice"]))
+                filaments, overlaps = detail_rows(name, sid, result)
+                filament_rows.extend(filaments)
+                overlap_rows.extend(overlaps)
         scoring_seconds += time.perf_counter() - before
         if save_predictions:
             np.savez_compressed(out / "predictions" / f"{name}.npz", probability=probability,
@@ -167,21 +208,15 @@ def evaluate_model(model, val_loader, device, cfg: dict, output_dir=None,
         primary_metric=ec.get("primary_metric", "PQ_dataset"),
         n_raw_annotation_sets=n_raw_sets,
         ground_truth_policy="cached disjoint maps; original binary layers for overlapping/empty annotations",
-        foreground_threshold=threshold, iou_matching_threshold=iou_threshold,
+        foreground_threshold=threshold, iou_matching_threshold=options["iou_thr"],
+        postprocess=postprocess,
         prediction_seconds=prediction_seconds, postprocess_seconds=postprocess_seconds,
         scoring_seconds=scoring_seconds, validation_seconds=time.perf_counter() - start,
         prediction_ms_per_image=1000 * prediction_seconds / len(visited),
         baseline_prediction_and_components_ms_per_image=1000 * (prediction_seconds + postprocess_seconds) / len(visited),
     )
     if out is not None:
-        _write_rows(out / "annotation_sets.csv", acc.per_image)
-        _write_rows(out / "observations.csv", acc.observation_rows())
-        _write_rows(out / "filaments.csv", filament_rows,
-                    ["observation", "annotation_set", "gt_id", "iou", "dice", "gt_area"])
-        _write_rows(out / "overlap_pairs.csv", overlap_rows,
-                    ["observation", "annotation_set", "gt_id", "pred_id", "iou", "dice"])
-        np.savez_compressed(out / "filament_scores.npz", **acc.filament_arrays())
-        np.savez_compressed(out / "overlap_scores.npz", **acc.overlap_arrays())
+        write_details(out, acc, filament_rows, overlap_rows)
         with (out / "summary.json").open("w", encoding="utf8") as f:
             json.dump(summary, f, indent=2, allow_nan=False)
     return summary

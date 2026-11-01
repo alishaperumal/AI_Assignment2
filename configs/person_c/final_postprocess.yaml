@@ -1,0 +1,11 @@
+# Person C selected post-processing for the seed-45 model (frozen after stage 2).
+# Fragments separated by gaps of at most 16 px share one instance ID (no pixels
+# added); predicted filaments smaller than 320 px are then removed. The pixel
+# cutoff stays at 0.5 and object matching stays at the official IoU > 0.5.
+extends: seed45_selected.yaml
+run:
+  name: seed45_final_postprocess
+  output_dir: runs/person_c/final
+postprocess:
+  bridge_radius: 8
+  min_area: 320

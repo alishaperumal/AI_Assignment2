@@ -1,0 +1,41 @@
+{
+  "rule": "Among the benchmarked variants, all scored with the selected post-processing on the unchanged validation split on the same RTX 3070, choose the smallest deployable file whose validation PQ_dataset is within 0.002 of the uncompressed teacher (seed-45 weights, mixed-precision inference). Ties: the faster end-to-end test pipeline. If no compressed variant qualifies, keep the teacher.",
+  "tolerance": 0.002,
+  "teacher_validation_PQ": 0.40335888709841344,
+  "chosen": "Pruned 30% + FP16 weights",
+  "chosen_bench": "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\person_c\\compression\\bench_pruned30_fp16",
+  "variant": "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\person_c\\compression\\pruned30_fp16.pt",
+  "variant_sha256": "96bce2f36fd26f7e0b54596dacc13b4083dd1dcec56046ebcaca3812e16f03e6",
+  "precision": "fp16",
+  "model_label": "U-Net / ResNet34, seed 45 (Pruned 30% + FP16 weights)",
+  "training_text": "12.4 min teacher training loop (20 epochs, RTX 5060 Ti) + 4.0 min fine-tuning after pruning (RTX 3070)",
+  "size_text": "11.93 M parameters, 22.9 MB weights file",
+  "timing_text": "475 ms/image over 180 test images (476 ms excluding the first), RTX 3070",
+  "pq_text": "0.4031 (selected post-processing; baseline conversion 0.3288)",
+  "validation_PQ": 0.40313971837052637,
+  "n_images": 180,
+  "n_filaments": 1421,
+  "zero_detection_images": [
+    "20180507140210Th",
+    "20200310113230Ch",
+    "20211214174010Mh"
+  ],
+  "csv_sha256": "1b08bcb078b2a44ad9e64545490c875b5c0fb01db87a1b34c2570825a5e9fb2f",
+  "end_to_end_ms_per_image": 474.75657666929897,
+  "timing_scope": "read + preprocess + transfer + model + components + RLE round-trip + CSV; optional probability export included; no warm-up excluded; model loading excluded",
+  "postprocess": {
+    "seed_threshold": null,
+    "min_area": 320,
+    "close_radius": 0,
+    "fill_holes": false,
+    "bridge_radius": 8,
+    "split_threshold": null,
+    "split_min_core_area": 50,
+    "connectivity": 2
+  },
+  "foreground_threshold": 0.5,
+  "csv": "C:\\Users\\denis\\OneDrive\\Desktop\\UP\\2026\\COS_711\\A2_fr\\AI_Assignment2\\runs\\person_c\\final\\submission.csv",
+  "compression_conclusion": "FP16 weights: PQ change -0.00001 at 47 vs 93 MB; distillation 0.401 vs label-only 0.398 (ResNet18, 14.3 M params); 50% channel pruning 0.365 (6.1 M params); 30% channel pruning 0.403 (11.9 M params). Chosen by the declared rule: Pruned 30% + FP16 weights.",
+  "kaggle_score": null,
+  "kaggle_note": "Not uploaded by this work; record the score after the team's upload."
+}

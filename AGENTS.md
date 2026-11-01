@@ -4,7 +4,7 @@
 
 Read [PERSON_C_START_HERE.md](PERSON_C_START_HERE.md), [README.md](README.md), [HANDOFF.md](HANDOFF.md), then the linked frozen Person C handoff and results interpretation. The assignment PDF and Word team guide define requirements and responsibilities. The current user request determines the scope of work.
 
-Person A fixes and Person B's local research/deliverables were completed on 1 November 2026: 17 research runs, 186 epochs, three fresh seeds, verified model/prediction package and presentation content. [Completion evidence](results/person_b_completion_verification.json) records that historical state. Do not rerun completed training as routine setup. Inspect actual files, summary/history records, active processes and available disk space before starting jobs.
+Person A fixes and Person B's local research/deliverables were completed on 1 November 2026: 17 research runs, 186 epochs, three fresh seeds, verified model/prediction package and presentation content. [Completion evidence](results/person_b_completion_verification.json) records that historical state. Person C's enhancement, compression and delivery work followed the same day; its results, configs and provenance are in [results/person_c/person_c_results.md](results/person_c/person_c_results.md) and `results/person_c/`. Do not rerun completed training as routine setup. Inspect actual files, summary/history records, active processes and available disk space before starting jobs.
 
 ## Preserve evidence and user constraints
 
@@ -22,8 +22,8 @@ Person A fixes and Person B's local research/deliverables were completed on 1 No
 - Extra misses are especially pronounced in exported seed 45: FN 507 versus baseline 449. The controlled seed-42 recipe comparison has FN 451 versus 449. Do not attribute all 58 extra misses to augmentation removal.
 - `evaluation.threshold` controls pixel inclusion; `evaluation.iou_threshold` controls object matching. Preserve official strict IoU > 0.5 matching and pooled `PQ_dataset` over all annotation sets. Do not substitute a mean of image PQ values.
 - Preserve `evaluate.py`'s handling of original overlapping/empty annotation layers. Only evaluating integer-cache maps loses some reference information.
-- Saved NPZ probabilities exist, but an offline scoring/sweep CLI does not yet exist at this handoff. `evaluate.py` runs checkpoint inference; do not invent `--predictions-dir`. See the start guide for the first C runner task and regression target.
-- Mixed-precision inference and omission of optimizer state are already implemented; neither proves a compression improvement. Compare quality, deployable size and consistently scoped end-to-end runtime.
+- Saved NPZ probabilities are scored offline with `offline_eval.py` (it reproduced the seed-45 baseline exactly before any modified processing was trusted). `evaluate.py` still runs checkpoint inference; do not invent `--predictions-dir`. Post-processing is configured by the `postprocess` config section (defaults reproduce the baseline) and applied identically by `evaluate.py`, `predict.py` and the offline runner.
+- Mixed-precision inference and omission of optimizer state do not by themselves prove a compression improvement. Person C's compression study compares quality, deployable size and consistently scoped end-to-end runtime per variant (`compress.py`, `compress_onnx.py`).
 - Three zero-detection test images are recorded in the sidecar. Do not fabricate CSV objects or imply Kaggle acceptance. Test images have no supplied labels, so no accuracy ranking is available.
 
 ## Verification and handoff hygiene

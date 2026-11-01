@@ -1,0 +1,22 @@
+{
+  "csv": "runs\\person_c\\final\\submission.csv",
+  "sha256": "1b08bcb078b2a44ad9e64545490c875b5c0fb01db87a1b34c2570825a5e9fb2f",
+  "rows": 1421,
+  "header_ok": true,
+  "ids_well_formed": true,
+  "ids_unique": true,
+  "images_with_rows": 177,
+  "test_images": 180,
+  "zero_detection_images": [
+    "20180507140210Th",
+    "20200310113230Ch",
+    "20211214174010Mh"
+  ],
+  "zero_detection_matches_sidecar": true,
+  "empty_masks": 0,
+  "wrong_shape_masks": 0,
+  "images_with_overlapping_instances": 0,
+  "min_instance_area": 321,
+  "problems": [],
+  "note": "Independent decode of every RLE with pycocotools; min area >= 320 confirms the size filter"
+}
