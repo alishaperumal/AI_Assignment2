@@ -39,10 +39,15 @@ DEFAULTS = {
               "amp": True, "patience": 8, "validate_every": 1,
               "gradient_clip": 1.0, "deterministic": True, "device": "auto",
               "accumulation_steps": 1},
-    "inference": {"tile_size": None, "overlap": 128, "resize": None, "amp": True},
+    "inference": {"tile_size": None, "overlap": 128, "resize": None, "amp": True, "tta": False},
     "evaluation": {"threshold": 0.5, "iou_threshold": 0.5,
                    "primary_metric": "PQ_dataset", "save_predictions": False,
                    "relation_tau": 0.1, "relation_own": 0.5, "progress": True},
+    # Person C instance conversion; these defaults reproduce the baseline exactly.
+    # evaluation.threshold remains the pixel cutoff. See postprocess.py.
+    "postprocess": {"seed_threshold": None, "min_area": 0, "close_radius": 0,
+                    "fill_holes": False, "bridge_radius": 0, "split_threshold": None,
+                    "split_min_core_area": 50, "connectivity": 2},
     "diagnostic": {},
 }
 
@@ -128,8 +133,12 @@ def validate_config(cfg: dict) -> None:
             raise ValueError(f"{name} must be null or a positive multiple of 32")
     if inf["overlap"] < 0 or (inf["tile_size"] and inf["overlap"] >= inf["tile_size"]):
         raise ValueError("inference.overlap must be nonnegative and smaller than tile_size")
+    if not isinstance(inf["tta"], bool):
+        raise ValueError("inference.tta must be true or false")
     if d["train_resize"] and d["crop"] > d["train_resize"]:
         raise ValueError("data.crop cannot exceed data.train_resize")
+    from postprocess import resolve_postprocess
+    resolve_postprocess(cfg.get("postprocess"), e["threshold"])
 
 
 def load_config(path: str | Path | dict | None = None) -> dict:

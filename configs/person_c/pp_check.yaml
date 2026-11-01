@@ -1,0 +1,13 @@
+description: >
+  Check grid applied unchanged to other probability sources (TTA probabilities,
+  compressed models): the reference conversion, the selected post-processing,
+  and the selected post-processing at nearby pixel cutoffs.
+candidates:
+  - family: selected
+    name: selected
+    bridge_radius: 8
+    min_area: 320
+  - family: selected_cutoff
+    threshold: [0.35, 0.4, 0.45, 0.55]
+    bridge_radius: 8
+    min_area: 320

@@ -1,0 +1,9 @@
+﻿{
+    "declared_at_local":  "2026-11-01T12:51:25+02:00",
+    "declared_before":  "any compression benchmark (runs/person_c/compression/bench_*) had produced validation or timing results",
+    "postprocess":  "configs/person_c/final_postprocess.yaml (bridge_radius 8, min_area 320, cutoff 0.5), frozen after stage 2",
+    "rule":  "Among the benchmarked variants, all scored with the selected post-processing on the unchanged validation split on the same RTX 3070, choose the smallest deployable file whose validation PQ_dataset is within 0.002 of the uncompressed teacher (seed-45 weights, mixed-precision inference). Ties: the faster end-to-end test pipeline. If no compressed variant qualifies, keep the teacher.",
+    "tolerance_reason":  "0.002 is about a quarter of the across-seed standard deviation of the selected recipe (0.0076), i.e. well inside run-to-run variation",
+    "output":  "The chosen variant\u0027s benchmark CSV (same predict_test pipeline) becomes runs/person_c/final/submission.csv",
+    "kaggle":  "No upload is performed by this work; the team uploads the CSV and records the score"
+}

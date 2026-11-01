@@ -21,3 +21,32 @@ The ten-slide insert has seven spoken slides (allow about 3–4 minutes), one op
 `configuration_selection.json` provides the frozen selection decision. The builder preserves its near-tie interpretation and does not treat a single selection seed as evidence of statistical superiority. The `no_augmentation` label is explained as disabling added transforms while keeping random foreground-biased crops. Pixel Dice/IoU are identified as foreground coverage scores, and timing separates the training loop from the latest subprocess wall time and complete test export. `presentation_evidence.mjs` contains lightweight selection/formatting helpers; its Node tests require no model or rendering runtime.
 
 The main pooled validation PQ is **0.33695 ± 0.00758**, the mean and sample standard deviation across seeds 43, 44 and 45. The representative seed-45 checkpoint scores 0.34481 and supplies the pictures; it is not the average run. It makes fewer extra predictions than baseline (1007 versus 1416 pooled false positives), but misses more reference instances (507 versus 449 false negatives). The notes preserve that tradeoff. The checked no-archive image-to-CSV pipeline averages 536.3 ms/image, including the first image and excluding model loading and probability-archive saving. The separate canonical export includes full-resolution probability and instance arrays for Person C.
+
+## Person C additions: team deck, video and final ZIP
+
+`build_team_deck.py` (python-pptx) builds Person C's slides from the recorded Person C results and assembles the team presentation. It opens `person_b_results.pptx` read-only as the style template and never overwrites it.
+
+```powershell
+.\.venv\Scripts\python.exe person_c_report.py          # refresh results/person_c and figures/person_c
+.\.venv\Scripts\python.exe delivery\build_team_deck.py
+```
+
+| Output | Contents |
+|---|---|
+| `person_c_enhancement.pptx` | Person C section only: error analysis, post-processing study, selected rule, best/worst cases, negative results, compression, final pipeline, conclusions, references |
+| `COS711_A2_team_presentation.pptx` | Title and roles, three dataset slides drafted from Person A's recorded EDA, Person B's seven spoken slides and test illustration, the Person C section, then all references |
+| `person_c_speaker_notes.md` | Narration for the Person C slides (also embedded as PowerPoint notes) |
+
+Every new slide keeps the upper-right corner free for the speaker's camera, as on Person B's slides. Person A should check the three dataset slides (they only use A's recorded `results/eda_summary.json` and `figures/eda_*.png`). Before recording: replace "Person A/B/C" with names, add the Kaggle score to the final-pipeline slide after uploading, and rehearse with a timer (the assignment limit is 10 minutes).
+
+Record each section with a screen recorder that places your webcam (head and shoulders) in the upper-right corner, then merge and compress below the limits with the bundled ffmpeg (`pip install imageio-ffmpeg`):
+
+```powershell
+.\.venv\Scripts\python.exe delivery\prepare_video.py part_A.mp4 part_B.mp4 part_C.mp4 --output presentation.mp4
+```
+
+Finally build the ZIP from the exact CSV uploaded to Kaggle (it checks the CSV header, the 50 MB / 10 minute video limits, and excludes data, caches, weights and run outputs):
+
+```powershell
+.\.venv\Scripts\python.exe make_submission_zip.py --submission runs\person_c\final\submission.csv --slides delivery\COS711_A2_team_presentation.pptx --video presentation.mp4 --output COS711_A2_submission.zip
+```

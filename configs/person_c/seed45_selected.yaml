@@ -1,0 +1,82 @@
+﻿# Person B's selected seed-45 model (portable copy of runs/person_b_final/config.yaml).
+# Person C configs extend this file; only post-processing/inference settings change.
+run:
+  name: no_augmentation_seed45
+  output_dir: runs/person_c/seed45_reference
+seed: 45
+data:
+  data_root: data
+  cache_dir: cache
+  split: splits/split_v1.json
+  crop: 512
+  train_resize: null
+  pos_frac: 0.7
+  batch_size: 4
+  num_workers: 2
+  val_num_workers: 1
+  target: per_set
+  epoch_length: 960
+  augment: false
+  seed: 45
+  pin_memory: true
+  drop_last: true
+  preprocess:
+    mask_disc: false
+    clahe: false
+    clahe_clip: 2.0
+    clahe_tile: 8
+    local_norm: false
+    local_sigma: 60.0
+    mean: 0.32688403099775315
+    std: 0.22290047382928638
+  aug:
+    hflip: 0.5
+    vflip: 0.5
+    rot90: 0.5
+    affine: 0.5
+    rotate_limit: 30
+    scale_limit: 0.2
+    brightness_contrast: 0.5
+    brightness_limit: 0.2
+    contrast_limit: 0.2
+    noise: 0.3
+    blur: 0.2
+model:
+  architecture: unet
+  encoder_name: resnet34
+  encoder_weights: imagenet
+  in_channels: 1
+  classes: 1
+loss:
+  name: bce_dice
+  bce_weight: 1.0
+  dice_weight: 1.0
+  alpha: 0.3
+  beta: 0.7
+  smooth: 1.0
+  pos_weight: null
+train:
+  epochs: 20
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  amp: true
+  patience: 0
+  validate_every: 1
+  gradient_clip: 1.0
+  deterministic: true
+  device: auto
+  accumulation_steps: 1
+inference:
+  tile_size: null
+  overlap: 128
+  resize: null
+  amp: true
+evaluation:
+  threshold: 0.5
+  iou_threshold: 0.5
+  primary_metric: PQ_dataset
+  save_predictions: false
+  relation_tau: 0.1
+  relation_own: 0.5
+  progress: true
+diagnostic: {}

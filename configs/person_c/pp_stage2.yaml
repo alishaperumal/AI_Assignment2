@@ -1,0 +1,21 @@
+description: >
+  Person C post-processing study, stage 2, declared after reviewing stage 1 and
+  before scoring these settings. Stage 1 showed that removing small regions and
+  bridging nearby fragments helped most, hysteresis seeds helped less, and core
+  splitting, 4-connectivity, hole filling and the pixel cutoff alone did not help.
+  min_area and bridge_radius peaked at the edge of the stage-1 grid, so their
+  ranges are extended. Bridging runs before small-region removal, so fragments
+  close to a filament join it instead of being deleted.
+candidates:
+  - family: min_area_extended
+    min_area: [480, 640, 960, 1280]
+  - family: bridge_extended
+    bridge_radius: [12, 16, 24]
+  - family: bridge_plus_min_area
+    bridge_radius: [3, 5, 8, 12, 16]
+    min_area: [80, 160, 320, 480, 640]
+  - family: seed_bridge_min_area
+    threshold: [0.4, 0.5]
+    seed_threshold: [0.9]
+    bridge_radius: [5, 8, 12]
+    min_area: [160, 320, 480]

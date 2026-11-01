@@ -1,0 +1,9 @@
+# Person C: flip test-time augmentation for the selected seed-45 model.
+# Probabilities of the image and its horizontal, vertical and double flips are
+# averaged before the single whole-image threshold/component step.
+extends: seed45_selected.yaml
+run:
+  name: seed45_tta
+  output_dir: runs/person_c/tta_evaluation
+inference:
+  tta: true

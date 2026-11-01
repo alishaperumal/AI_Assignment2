@@ -38,15 +38,45 @@ def _forward_probability(model, image: torch.Tensor, amp: bool) -> torch.Tensor:
     return torch.sigmoid(logits.float())[..., :h, :w]
 
 
+def _single_pass(model, image: torch.Tensor, c: dict) -> torch.Tensor:
+    """Whole-image or blended-tile probabilities for one (possibly flipped) image."""
+    if c["tile_size"] is None:
+        return _forward_probability(model, image, bool(c["amp"]))
+    tile, overlap = int(c["tile_size"]), int(c["overlap"])
+    if tile <= 0 or not 0 <= overlap < tile:
+        raise ValueError("tile_size must be positive and 0 <= overlap < tile_size")
+    height, width = image.shape[-2:]
+    probability = torch.zeros_like(image, dtype=torch.float32)
+    weights = torch.zeros((1, 1, height, width), device=image.device, dtype=torch.float32)
+    for y in _positions(height, tile, tile - overlap):
+        for x in _positions(width, tile, tile - overlap):
+            patch = image[..., y:y + tile, x:x + tile]
+            ph, pw = patch.shape[-2:]
+            # Non-zero raised-cosine weights reduce seams and cover edges.
+            wy = torch.hann_window(ph + 2, periodic=False, device=image.device)[1:-1]
+            wx = torch.hann_window(pw + 2, periodic=False, device=image.device)[1:-1]
+            weight = (wy[:, None] * wx[None, :]).clamp_min(1e-4)[None, None]
+            pred = _forward_probability(model, patch, bool(c["amp"]))
+            probability[..., y:y + ph, x:x + pw] += pred * weight
+            weights[..., y:y + ph, x:x + pw] += weight
+    return probability / weights
+
+
+# Test-time augmentation: identity plus horizontal, vertical and both flips.
+TTA_FLIPS = ((), (-1,), (-2,), (-2, -1))
+
+
 @torch.inference_mode()
 def predict_probability(model, image: torch.Tensor, cfg: dict | None = None) -> torch.Tensor:
     """Predict [B,1,H,W] probabilities on the input device at its original size.
 
     Config: ``resize`` (optional square model input size), ``tile_size``
-    (optional overlapping inference), ``overlap`` (pixels, default 128), and
-    ``amp`` (CUDA mixed precision, default True). Model mode is restored.
+    (optional overlapping inference), ``overlap`` (pixels, default 128),
+    ``amp`` (CUDA mixed precision, default True) and ``tta`` (average the
+    probabilities of the image and its three flips, default False). Model
+    mode is restored.
     """
-    c = {"resize": None, "tile_size": None, "overlap": 128, "amp": True, **(cfg or {})}
+    c = {"resize": None, "tile_size": None, "overlap": 128, "amp": True, "tta": False, **(cfg or {})}
     if image.ndim != 4 or image.shape[1] != 1 or min(image.shape[-2:]) < 1:
         raise ValueError("image must have shape [B,1,H,W] with non-empty spatial dimensions")
     if not image.is_floating_point() or not torch.isfinite(image).all():
@@ -64,27 +94,15 @@ def predict_probability(model, image: torch.Tensor, cfg: dict | None = None) -> 
     was_training = model.training
     model.eval()
     try:
-        if c["tile_size"] is None:
-            probability = _forward_probability(model, image, bool(c["amp"]))
-        else:
-            tile, overlap = int(c["tile_size"]), int(c["overlap"])
-            if tile <= 0 or not 0 <= overlap < tile:
-                raise ValueError("tile_size must be positive and 0 <= overlap < tile_size")
-            height, width = image.shape[-2:]
-            probability = torch.zeros_like(image, dtype=torch.float32)
-            weights = torch.zeros((1, 1, height, width), device=image.device, dtype=torch.float32)
-            for y in _positions(height, tile, tile - overlap):
-                for x in _positions(width, tile, tile - overlap):
-                    patch = image[..., y:y + tile, x:x + tile]
-                    ph, pw = patch.shape[-2:]
-                    # Non-zero raised-cosine weights reduce seams and cover edges.
-                    wy = torch.hann_window(ph + 2, periodic=False, device=image.device)[1:-1]
-                    wx = torch.hann_window(pw + 2, periodic=False, device=image.device)[1:-1]
-                    weight = (wy[:, None] * wx[None, :]).clamp_min(1e-4)[None, None]
-                    pred = _forward_probability(model, patch, bool(c["amp"]))
-                    probability[..., y:y + ph, x:x + pw] += pred * weight
-                    weights[..., y:y + ph, x:x + pw] += weight
-            probability /= weights
+        flips = TTA_FLIPS if c["tta"] else TTA_FLIPS[:1]
+        probability = None
+        for dims in flips:
+            view = torch.flip(image, dims) if dims else image
+            single = _single_pass(model, view, c)
+            single = torch.flip(single, dims) if dims else single
+            probability = single if probability is None else probability + single
+        if len(flips) > 1:
+            probability = probability / len(flips)
         if probability.shape[-2:] != original_size:
             probability = F.interpolate(probability, size=original_size, mode="bilinear", align_corners=False)
         return probability.clamp_(0, 1)

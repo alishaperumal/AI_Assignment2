@@ -2,9 +2,24 @@
 
 The project teaches a neural network to find **solar filaments**: thin, dark structures in grayscale images of the Sun. The final answer must identify each filament separately, rather than only mark all dark pixels. It uses the training images and segmentation annotations provided for the [Filament Segmentation 2026 competition](https://www.kaggle.com/competitions/filament-segmentation-2026).
 
-The assignment specification is `COS711-A2.pdf`; the division of work is in `COS711 Assignment 2 Team Plan and Implementation Guide.docx`. This repository contains corrected data preparation and exploratory analysis, completed model training and controlled experiments, evaluation, and a local submission exporter. Advanced instance separation, compression, team presentation assembly/recording, and authorized uploads remain separate work.
+The assignment specification is `COS711-A2.pdf`; the division of work is in `COS711 Assignment 2 Team Plan and Implementation Guide.docx`. This repository contains corrected data preparation and exploratory analysis, completed model training and controlled experiments, evaluation, Person C's instance post-processing and compression study, the final checked submission CSV, the team slide builder, and ZIP/video helpers. Recording the video and the authorized Kaggle/ClickUP uploads remain human actions.
 
-**Continuing as Person C or with a new coding assistant? Start with [PERSON_C_START_HERE.md](PERSON_C_START_HERE.md).** It links the evidence in reading order, explains the extra misses and their severity, identifies the offline scoring runner still to build, and gives a bounded continuation workflow. [AGENTS.md](AGENTS.md) supplies concise repository guidance for assistants. These current guides supplement the frozen B handoff and do not alter its verified package.
+**Continuing the work or using a new coding assistant? Start with [PERSON_C_START_HERE.md](PERSON_C_START_HERE.md)**, whose first section summarises the completed Person C work and the remaining human actions. [AGENTS.md](AGENTS.md) supplies concise repository guidance for assistants. These current guides supplement the frozen B handoff and do not alter its verified package.
+
+## Person C: post-processing, compression and final submission
+
+Full results, tables and figures: [results/person_c/person_c_results.md](results/person_c/person_c_results.md).
+
+* **Post-processing** (`postprocess.py`, configured by the `postprocess` section of any config; defaults reproduce the baseline). The selected rule bridges fragments up to 16 px apart into one instance (no pixels added) and removes regions under 320 px, raising pooled validation PQ of the seed-45 model from **0.3448 to 0.4034** on the same probabilities. It was chosen from declared searches scored by `offline_eval.py`, which first reproduced Person B's result exactly; split-half and bootstrap checks are recorded.
+* **Compression** (`compress.py`, `compress_onnx.py`): FP16 weights, structured channel pruning with fine-tuning, distillation with a label-only control, and ONNX Runtime FP32/INT8 on CPU, each compared on validation PQ, file size and end-to-end time.
+* **Final model and CSV**: 30% channel-pruned + FP16 U-Net/ResNet34 (11.93 M parameters, 22.9 MB), validation PQ 0.4031, 475 ms per image end-to-end on an RTX 3070. `runs/person_c/final/submission.csv` holds 1,421 filaments for the 180 test images (3 without detections) and was independently decoded and checked. It has not been uploaded.
+
+```powershell
+.\.venv\Scripts\python.exe evaluate.py --checkpoint runs/person_b_final/best_weights.pt --config configs/person_c/final_postprocess.yaml --output runs/person_c/check_final_postprocess
+.\.venv\Scripts\python.exe compress.py benchmark --variant runs/person_c/compression/pruned30_fp16.pt --name final --config configs/person_c/final_postprocess.yaml --output runs/person_c/rerun_final --precision fp16
+```
+
+The first command applies the selected post-processing to the original seed-45 checkpoint; the second reruns the final model's validation and complete test export (CSV plus timing) into a new directory.
 
 ## Completed modelling study
 
@@ -71,6 +86,9 @@ The baseline is a **U-Net with a ResNet34 encoder**, initialized from ImageNet w
 | `models.py`, `losses.py`, `train.py` | Models, losses, resumable training and checkpoint selection |
 | `inference.py`, `evaluate.py`, `metrics.py` | Shared prediction and instance-level evaluation |
 | `predict.py` | Test predictions, checked RLE encoding, and submission CSV |
+| `postprocess.py`, `offline_eval.py` | Person C instance conversion steps and offline scoring of saved probabilities |
+| `compress.py`, `compress_onnx.py` | Person C compression variants, distillation/pruning training and benchmarks |
+| `person_c_report.py`, `verify_inputs.py`, `make_submission_zip.py` | Person C results/figures, input hash checks, final ZIP assembly |
 | `experiments.py` | Sequential experiment runs and result/seed summaries |
 | `report.py`, `study_report.py` | Per-run and staged-study tables, learning curves, overlap plots, and prediction examples |
 | `local_job.py`, `package_person_b.py` | Sequential job logging/sleep protection and verified model/prediction packaging |
@@ -81,7 +99,7 @@ The baseline is a **U-Net with a ResNet34 encoder**, initialized from ImageNet w
 
 ## Setup on this Windows computer
 
-Run the commands from the repository root in PowerShell. The existing `.venv` uses Python 3.14.7 and the already installed GPU packages: **PyTorch 2.14.0+cu130 / torchvision 0.29.0**, with an NVIDIA RTX 5060 Ti. It was created with `--system-site-packages` to reuse these large packages; remaining dependencies were installed into `.venv`. This avoids duplicating the GPU stack on the available disk space. Package versions are pinned in `requirements.txt`.
+Run the commands from the repository root in PowerShell. Person B's `.venv` used Python 3.14.7 and the already installed GPU packages: **PyTorch 2.14.0+cu130 / torchvision 0.29.0**, with an NVIDIA RTX 5060 Ti. Person C's machine uses Python 3.12.9 with **PyTorch 2.13.0+cu132** on an **RTX 3070 (8 GB)**; the same pinned requirements installed there, the original 101 tests passed, and the seed-45 checkpoint reproduced its validation result (PQ 0.34492 against the recorded 0.34481, an expected small hardware difference in mixed precision). Each `.venv` was created with `--system-site-packages` to reuse the large GPU packages; remaining dependencies were installed into `.venv`. This avoids duplicating the GPU stack on the available disk space. Package versions are pinned in `requirements.txt`; Person C's compression tools additionally need `onnx onnxruntime torch-pruning` and the deck builder needs `python-pptx`.
 
 If `.venv` already exists, use it directly. To recreate this arrangement on a computer whose base Python already has the compatible GPU packages:
 
@@ -98,19 +116,31 @@ Check the interpreter and GPU before starting a long run:
 .\.venv\Scripts\python.exe -c "import torch; print(torch.__version__); print('CUDA available:', torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
 ```
 
-Set the dataset location for this PowerShell session:
+### Adding the data and Person B's model package (each teammate, locally)
+
+The dataset and trained weights are too large for Git, so every teammate adds them to their own copy. `data/`, `cache/` and `runs/` are Git-ignored, so nothing here is ever pushed.
+
+1. **Dataset.** Use the competition zip (`filament-segmentation-2026.zip`, from the Kaggle Data page after accepting the rules; about 671 MB). It contains one folder, `MAGFiLO_1.0_Kaggle_2026`. Extract it and rename that folder to `data` inside the repository, so that `data\train\train_images`, `data\train\MAGFiLO_1.0_Annotations_kaggle2026_train.json` and `data\test\test_images` exist. This is the default `data_root` of every config, so no environment variable is needed.
+2. **Person B's package** (`person_b_final.zip`, about 1.5 GB: selected weights, configs, saved validation/test probabilities). Extract it into `runs\` so that `runs\person_b_final\best_weights.pt` exists.
+3. **Check both** against the hashes recorded by Person B, then build the annotation cache (about one minute):
 
 ```powershell
-$env:FILAMENT_DATA = 'C:\Users\user-pc\Desktop\COS711_Assig2\filament-segmentation-2026\MAGFiLO_1.0_Kaggle_2026'
+tar -xf "$HOME\Downloads\filament-segmentation-2026.zip" -C "$env:TEMP"
+Move-Item "$env:TEMP\MAGFiLO_1.0_Kaggle_2026" .\data
+tar -xf "$HOME\Downloads\person_b_final.zip" -C .\runs
+.\.venv\Scripts\python.exe verify_inputs.py
+.\.venv\Scripts\python.exe data.py build-cache --data-root data --cache-dir cache --workers 4
 ```
 
-The directory must contain `train/train_images`, `train/MAGFiLO_1.0_Annotations_kaggle2026_train.json`, and `test/test_images`. There is no need to copy it into the repository. `FILAMENT_CACHE` can similarly change the cache directory. Explicit YAML `data.data_root` / `data.cache_dir` settings take precedence over environment defaults. Relative YAML paths resolve from the repository root; `extends` paths resolve from the YAML file containing them.
+`verify_inputs.py` must report 888/888 dataset files and 386/386 package files unchanged. (`Expand-Archive` also works but is much slower than the built-in `tar`.) If you prefer to keep the data elsewhere, point `FILAMENT_DATA` (and optionally `FILAMENT_CACHE`) at it, or pass `--data-root`; note that the portable configs in `runs/person_b_final/config.yaml` and `configs/person_c/` name `data`/`cache` explicitly, and explicit YAML paths take precedence over environment variables. Person B's original machine used `$env:FILAMENT_DATA = 'C:\Users\user-pc\Desktop\COS711_Assig2\filament-segmentation-2026\MAGFiLO_1.0_Kaggle_2026'`.
 
-Build the local cache and calculate normalization values from training observations only:
+The data directory must contain `train/train_images`, `train/MAGFiLO_1.0_Annotations_kaggle2026_train.json`, and `test/test_images`. `FILAMENT_CACHE` can similarly change the cache directory. Explicit YAML `data.data_root` / `data.cache_dir` settings take precedence over environment defaults. Relative YAML paths resolve from the repository root; `extends` paths resolve from the YAML file containing them.
+
+Build the local cache and calculate normalization values from training observations only (the statistics step is only needed for new training studies):
 
 ```powershell
-.\.venv\Scripts\python.exe data.py build-cache --data-root "$env:FILAMENT_DATA" --workers 2
-.\.venv\Scripts\python.exe data.py stats --data-root "$env:FILAMENT_DATA" --workers 2 --max-images 200
+.\.venv\Scripts\python.exe data.py build-cache --data-root data --workers 2
+.\.venv\Scripts\python.exe data.py stats --data-root data --workers 2 --max-images 200
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 

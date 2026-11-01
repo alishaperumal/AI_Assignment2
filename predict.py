@@ -21,8 +21,9 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from inference import predict_probability, probability_to_instances
+from inference import predict_probability
 from evaluate import file_sha256, resolve_device
+from postprocess import probability_to_instances_pp, resolve_postprocess
 
 IMAGE_SHAPE = (2048, 2048)
 _OBSERVATION_ID = re.compile(r"\d{14}[A-Za-z]{2}\Z")
@@ -113,6 +114,7 @@ def predict_test(model, cfg: dict, device, output_path, save_probabilities=None)
         save_dir.mkdir(parents=True, exist_ok=True)
     preprocessing = cfg["data"].get("preprocess", {})
     threshold = float(cfg.get("evaluation", {}).get("threshold", 0.5))
+    postprocess = resolve_postprocess(cfg.get("postprocess"), threshold)
     image_timings = []
 
     def predictions():
@@ -125,7 +127,7 @@ def predict_test(model, cfg: dict, device, output_path, save_probabilities=None)
             x = D.normalise(D.preprocess_image(raw, preprocessing), preprocessing)
             image = torch.from_numpy(np.ascontiguousarray(x[None, None])).to(device)
             probability = predict_probability(model, image, cfg.get("inference", {}))[0, 0].cpu().numpy()
-            instances = probability_to_instances(probability, threshold)
+            instances = probability_to_instances_pp(probability, threshold, postprocess)
             if save_dir:
                 np.savez_compressed(save_dir / f"{observation}.npz", probability=probability,
                                     instances=instances.astype(np.uint32), observation=observation)
@@ -139,7 +141,7 @@ def predict_test(model, cfg: dict, device, output_path, save_probabilities=None)
     report = write_submission(predictions(), output_path)
     report.update(
         data_root=str(data_root), foreground_threshold=threshold, inference=cfg.get("inference", {}),
-        config=cfg,
+        postprocess=postprocess, config=cfg,
         end_to_end_seconds=time.perf_counter() - started,
         end_to_end_ms_per_image=1000 * sum(r["seconds"] for r in image_timings) / len(image_timings),
         timing_scope="read + preprocess + transfer + model + components + RLE round-trip + CSV; optional probability export included; no warm-up excluded",

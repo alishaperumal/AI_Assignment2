@@ -1,0 +1,34 @@
+description: >
+  Person C post-processing study, stage 1. Declared before any scoring: one change
+  at a time from the unchanged seed-45 probabilities and the baseline conversion
+  (pixel cutoff 0.5, 8-connected components). The same frozen validation split,
+  scoring code and IoU > 0.5 matching are used for every setting.
+candidates:
+  # Pixel cutoff (evaluation.threshold) around the baseline value.
+  - family: threshold
+    threshold: [0.3, 0.35, 0.4, 0.45, 0.55, 0.6, 0.65, 0.7]
+  # Hysteresis: weak pixels survive only when connected to a confident seed.
+  - family: hysteresis
+    threshold: [0.3, 0.35, 0.4, 0.45]
+    seed_threshold: [0.5, 0.6, 0.7, 0.8, 0.9]
+  # Same idea at the baseline cutoff: drop regions without a confident pixel.
+  - family: confident_regions
+    seed_threshold: [0.6, 0.7, 0.8, 0.9]
+  # Remove small isolated predictions ("islands").
+  - family: min_area
+    min_area: [10, 20, 40, 80, 160, 320]
+  # Join nearby fragments into one instance without adding pixels.
+  - family: bridge
+    bridge_radius: [1, 2, 3, 5, 8]
+  # Morphological closing: adds pixels across small gaps.
+  - family: closing
+    close_radius: [1, 2, 3, 5]
+  - family: fill_holes
+    fill_holes: true
+  # Split regions containing several confident cores (touching neighbours).
+  - family: core_split
+    split_threshold: [0.7, 0.8, 0.9]
+    split_min_core_area: [20, 100]
+  # 4-connectivity separates diagonally touching regions.
+  - family: connectivity
+    connectivity: 1
