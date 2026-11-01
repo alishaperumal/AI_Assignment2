@@ -1,0 +1,131 @@
+{
+  "verified_at_utc": "2026-10-31T22:02:20.859083+00:00",
+  "scope": "Person A corrections and Person B code; real integration verification, not completed modelling study",
+  "automated_tests": {
+    "passed": 74,
+    "command": ".venv/Scripts/python.exe -m pytest -q",
+    "warnings": "42 upstream pycocotools/NumPy deprecation warnings; encoding round trips passed"
+  },
+  "data": {
+    "train_observations": 707,
+    "annotation_sets": 1154,
+    "filament_annotations": 8199,
+    "test_observations": 180,
+    "eda_nonempty_cells_executed": 16,
+    "split_unchanged": true,
+    "split_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3",
+    "split_train": 584,
+    "split_validation": 122,
+    "split_excluded": 1,
+    "normalization_training_images": 200
+  },
+  "hardware_and_software": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "torch_cuda": "13.0",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "torchvision": "0.29.0+cu130",
+      "segmentation-models-pytorch": "0.6.0",
+      "albumentations": "2.0.8",
+      "numpy": "2.5.3",
+      "opencv-python": null,
+      "opencv-python-headless": "5.0.0.93",
+      "scipy": "1.18.1",
+      "pycocotools": "2.0.11"
+    }
+  },
+  "source_sha256": {
+    "config.py": "fbd2b5e2405f549f75a58744a935877279ce697d5d36899e099b6842bd2cbc24",
+    "data.py": "89235ff97c49fbccca9b3a2b9f955e7fbd51e75c1a968b752863034ab7df10cc",
+    "models.py": "5db037f3d55d330ceb07944db92b1219a0212779d270193b7a74a75d5848d2fc",
+    "losses.py": "0c9546ae8bab83a94781bb9c832a20762a66d58c742cb83dfc2fe001dcd195b2",
+    "train.py": "02b7c801d4d16fed94277f96637c79772c837f112caad1d1cab6d00d89495b24",
+    "inference.py": "fab9db965e06740568083d362115de8a4c5d3ba10595c79503e7f697d964894a",
+    "evaluate.py": "5d88e553478c5730850f5b0460eb99968a9b30814cda2d6677dca0868f92e07b",
+    "metrics.py": "871db7b38a2f862caefb7f27e9f23a3e82a8ff8ab3ef38ed27e565062c73d45c"
+  },
+  "gpu_capacity_checks": {
+    "diagnostic_only": true,
+    "random_inputs_and_initialization": true,
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "checks": [
+      {
+        "architecture": "unet",
+        "batch": 4,
+        "size": 1024,
+        "optimizer_step_completed": true,
+        "peak_allocated_GiB": 3.6132917404174805
+      },
+      {
+        "architecture": "unetplusplus",
+        "batch": 4,
+        "size": 512,
+        "optimizer_step_completed": true,
+        "peak_allocated_GiB": 2.182448387145996
+      }
+    ]
+  },
+  "learning_diagnostic": {
+    "training_crops": 4,
+    "final_training_dice": 0.9987950325012207,
+    "validation_performance_claim": false,
+    "details": "runs/diagnostic_overfit/fit_check.json",
+    "resume_check": "60-epoch diagnostic resumed successfully after epoch 5; later constant-learning-rate fit check recorded separately"
+  },
+  "baseline": {
+    "status": "preliminary_partial",
+    "epochs_completed": 2,
+    "epochs_planned": 20,
+    "stop_reason": "invocation_limit",
+    "optimizer_steps": 480,
+    "PQ_dataset": 0.2051268433887372,
+    "SQ_dataset": 0.6339090572717377,
+    "RQ_dataset": 0.323590333716916,
+    "validation_observations": 122,
+    "validation_annotation_sets": 200,
+    "reloaded_checkpoint_score_matches": true,
+    "parameters": 24430097,
+    "weights_file_bytes": 97895283,
+    "checkpoint_sha256": "1c4d36e0e6affda05bd980d7a138c4512259a8650223cb115059d949ce739ec9",
+    "run_directory": "runs/E0_baseline_seed42"
+  },
+  "submission": {
+    "path": "runs/E0_baseline_seed42/submission.csv",
+    "sha256": "10bbfe8c4ff948c10afff1cf3dde838c36034eec462977b5d4b6389664c44a8b",
+    "test_images": 180,
+    "predicted_instances": 3141,
+    "all_test_images_covered": true,
+    "zero_detection_images": [],
+    "rle_round_trip_verified": true,
+    "kaggle_upload_verified": false,
+    "end_to_end_seconds": 240.5545077000279,
+    "timing_scope": "read + preprocess + transfer + model + components + RLE round-trip + CSV; optional probability export included; no warm-up excluded",
+    "timing_note": "Integration-run timing, including probability archives; not a controlled compression benchmark"
+  },
+  "artifacts": {
+    "validation_predictions": 122,
+    "test_predictions": 180,
+    "report": "runs/E0_baseline_seed42/report/person_b_results.md",
+    "validation_summary": "runs/E0_baseline_seed42/evaluation/summary.json",
+    "experiment_table": "runs/screen/experiments.csv"
+  },
+  "prepared_comparisons": {
+    "count": 11,
+    "status": "pending_not_trained",
+    "epochs": 6,
+    "samples_per_epoch": 960,
+    "optimizer_updates_per_epoch": 240,
+    "seed": 42
+  },
+  "remaining": [
+    "Finish the 20-epoch baseline (or its configured early stop)",
+    "Run controlled comparisons and select the final setup using validation",
+    "Run the selected setup with at least three seeds and report measured variation",
+    "Regenerate evaluation, predictions, and report for the finished selected model",
+    "Verify an actual Kaggle upload and record its score",
+    "Person C: advanced postprocessing, separation, compression, and final deliverables"
+  ]
+}

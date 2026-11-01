@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "checked_utc": "2026-11-01T03:22:57.456312+00:00",
+  "artifact": "person_b_results.pptx",
+  "sha256": "ef06968167056a16b02b981502a93dc952fc4469809da7263e356e803987cd0a",
+  "bytes": 1010058,
+  "slide_count": 10,
+  "rendered_slide_count": 10,
+  "visually_reviewed_slide_count": 10,
+  "embedded_notes_count": 10,
+  "embedded_notes_match_markdown": true,
+  "core_spoken_word_count": 465,
+  "core_suggested_seconds": 230,
+  "package_integrity": "pass",
+  "layout_and_font_checks": "pass",
+  "first_party_pptx_import": "pass",
+  "native_editable_tables": 5,
+  "placeholder_scan": "pass",
+  "measured_results_cross_check": "pass",
+  "validation_receipt": "validation_receipt.json",
+  "study_summary": "../results/person_b_study/summary.json",
+  "study_summary_sha256": "8693f6bcac303fd837b0b33c24f02a47f6421e683e3e67029e3efbc0d112086c",
+  "visual_review": [
+    {
+      "slide": 1,
+      "render": "slide_previews/slide-01.png",
+      "sha256": "cbceb6c68ead070169367148127fb8fdae36fb59256e7ea471a5cf949766594d",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Byte-identical final render to individually inspected first build",
+      "findings": []
+    },
+    {
+      "slide": 2,
+      "render": "slide_previews/slide-02.png",
+      "sha256": "dcaeaf7efbb153e644a026f0f8fff24ed4f141523903c555bd01e3063cc2bb11",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Byte-identical final render to individually inspected first build",
+      "findings": []
+    },
+    {
+      "slide": 3,
+      "render": "slide_previews/slide-03.png",
+      "sha256": "7d6dc4313e316701a4436566bdce905a1243f4d814b19948dc8c75cc9a793617",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Individually inspected updated final render",
+      "findings": []
+    },
+    {
+      "slide": 4,
+      "render": "slide_previews/slide-04.png",
+      "sha256": "1eaf1c30070ba89c3611d94f5c132fcb6ca36aed69ca27d47760025429a7ed69",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Byte-identical final render to individually inspected first build",
+      "findings": []
+    },
+    {
+      "slide": 5,
+      "render": "slide_previews/slide-05.png",
+      "sha256": "2e8c8d859d81e3257879ce2d86bb9da2694f6ec3d150339570a6a03bd8f2dc8f",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Individually inspected updated final render",
+      "findings": []
+    },
+    {
+      "slide": 6,
+      "render": "slide_previews/slide-06.png",
+      "sha256": "5eadebf6c9466d75f2960326d75d6f7f39c93707a9ed23befc1c9396890bf486",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Individually inspected updated final render",
+      "findings": []
+    },
+    {
+      "slide": 7,
+      "render": "slide_previews/slide-07.png",
+      "sha256": "e19946e6121049c0db69205eb418a71346bd45923ceded95553ccc979db0e433",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Individually inspected updated final render",
+      "findings": []
+    },
+    {
+      "slide": 8,
+      "render": "slide_previews/slide-08.png",
+      "sha256": "6811d0eca462757f920a542e38ff2d5de90587049ca3e7adea3d61eb44035cce",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Byte-identical final render to individually inspected first build",
+      "findings": []
+    },
+    {
+      "slide": 9,
+      "render": "slide_previews/slide-09.png",
+      "sha256": "f3ec6f55c6fe89baee5780158539352b1afd57047c2aa732f3c308e5fdf68999",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Byte-identical final render to individually inspected first build",
+      "findings": []
+    },
+    {
+      "slide": 10,
+      "render": "slide_previews/slide-10.png",
+      "sha256": "3581211d57ef8d891a2b9bb8c32a85d437d7d220de40ecae0d200823e574d324",
+      "size_px": [
+        1280,
+        720
+      ],
+      "visually_reviewed": true,
+      "review_basis": "Byte-identical final render to individually inspected first build",
+      "findings": []
+    }
+  ],
+  "scope_notes": [
+    "All ten slides rendered and individually visually reviewed; unchanged final renders were verified byte-for-byte against reviewed renders.",
+    "Native PowerPoint application rendering was not tested. First-party import, package XML, geometry/font checks and raster previews were checked.",
+    "Sources and Measured evidence in notes are supporting material; only opening paragraphs are spoken.",
+    "Role label still needs the real presenter name. Team slide integration, recording, optional template transfer and account submission remain human actions.",
+    "No Kaggle upload or score is claimed."
+  ]
+}

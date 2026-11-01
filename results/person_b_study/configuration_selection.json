@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "selected_at_utc": "2026-11-01T01:35:08.583656+00:00",
+  "selected_variant": "no_augmentation",
+  "selection_seed": 42,
+  "selection_rule": "Highest best-checkpoint PQ_dataset at full budget. Exact ties prefer baseline, then fewer parameters, then variant name.",
+  "ranking": [
+    {
+      "variant": "no_augmentation",
+      "seed": 42,
+      "run_dir": "runs/full/no_augmentation_seed42",
+      "experiment_record": "runs/full/records/no_augmentation_seed42.json",
+      "PQ_dataset": 0.3380807049443372,
+      "best_epoch": 20,
+      "parameters": 24430097,
+      "planned_update_attempts": 4800,
+      "optimizer_steps": 4797,
+      "amp_skipped_steps": 3,
+      "weights_sha256": "bf48730cacee2004877e3aafb23724bf0771c17f12ff9ccdbd0d851ce22d7842",
+      "history_sha256": "f3ad1b1032305d6729956f1651bb0a6c163df91076fe38edcfadd4499ae8c4b3"
+    },
+    {
+      "variant": "resolution_1024",
+      "seed": 42,
+      "run_dir": "runs/full/resolution_1024_seed42",
+      "experiment_record": "runs/full/records/resolution_1024_seed42.json",
+      "PQ_dataset": 0.33745129254063183,
+      "best_epoch": 17,
+      "parameters": 24430097,
+      "planned_update_attempts": 4800,
+      "optimizer_steps": 4798,
+      "amp_skipped_steps": 2,
+      "weights_sha256": "0cca03b93ed2eac1b33f14fa41561dc8e500de840434bb1fc693b9b567c35215",
+      "history_sha256": "a5c27f6572913f6976eee90228d4eb471d582c1493b188cd963777f5f2727a14"
+    },
+    {
+      "variant": "baseline",
+      "seed": 42,
+      "run_dir": "runs/E0_baseline_seed42",
+      "job_sidecar": "runs/overnight/logs/baseline_resume.job.json",
+      "PQ_dataset": 0.3201272840617377,
+      "best_epoch": 20,
+      "parameters": 24430097,
+      "planned_update_attempts": 4800,
+      "optimizer_steps": 4797,
+      "amp_skipped_steps": 3,
+      "weights_sha256": "56080b8e4b6348ee0a3d56cf03ea1b28ec0ebb4b72507a58cfecfb4a79992732",
+      "history_sha256": "945d22781044a8a905144c7b9e8bda30339db71a929e4b87b2e0ed4f804641c0"
+    }
+  ],
+  "margin_to_runner_up": 0.0006294124037053428,
+  "interpretation": "Selection follows the preregistered numerical rule. The small candidate difference is not evidence of statistical superiority; only one selection seed was compared.",
+  "frozen_split_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3",
+  "source_sha256": {
+    "config.py": "fbd2b5e2405f549f75a58744a935877279ce697d5d36899e099b6842bd2cbc24",
+    "data.py": "89235ff97c49fbccca9b3a2b9f955e7fbd51e75c1a968b752863034ab7df10cc",
+    "models.py": "5db037f3d55d330ceb07944db92b1219a0212779d270193b7a74a75d5848d2fc",
+    "losses.py": "0c9546ae8bab83a94781bb9c832a20762a66d58c742cb83dfc2fe001dcd195b2",
+    "train.py": "02b7c801d4d16fed94277f96637c79772c837f112caad1d1cab6d00d89495b24",
+    "inference.py": "fab9db965e06740568083d362115de8a4c5d3ba10595c79503e7f697d964894a",
+    "evaluate.py": "5d88e553478c5730850f5b0460eb99968a9b30814cda2d6677dca0868f92e07b",
+    "metrics.py": "871db7b38a2f862caefb7f27e9f23a3e82a8ff8ab3ef38ed27e565062c73d45c"
+  },
+  "fresh_seeds": [
+    43,
+    44,
+    45
+  ],
+  "fresh_epochs": 20
+}

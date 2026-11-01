@@ -1,0 +1,122 @@
+{
+  "title": "COS711 Assignment 2: Person B modelling",
+  "version": 1,
+  "slides": [
+    {
+      "kind": "baseline",
+      "title": "Baseline model",
+      "subtitle": "U-Net with a ResNet34 encoder",
+      "rows": [
+        ["Input", "One grayscale image channel"],
+        ["Network", "ImageNet initialization and a U-Net decoder"],
+        ["Prediction", "Filament probability at every pixel"],
+        ["Instances", "Probability > 0.5, then connected components"]
+      ],
+      "takeaway": "Touching filaments may merge. Broken masks may split.",
+      "speaker_notes": "I handled the models, training and controlled comparisons. U-Net predicts a filament probability for each pixel, using a ResNet34 encoder initialized from ImageNet. We threshold those probabilities and label connected regions. This gives separate objects, but touching filaments can merge and broken masks can split. Person C can improve that conversion using our saved probabilities.",
+      "references": ["unet", "resnet", "smp"],
+      "local_sources": ["models.py", "inference.py", "configs/baseline.yaml"],
+      "seconds": 30
+    },
+    {
+      "kind": "training",
+      "title": "Training and validation",
+      "rows": [
+        ["Training input", "512 × 512 crops with foreground sampling"],
+        ["Loss", "Binary cross entropy + Dice overlap loss"],
+        ["Optimization", "AdamW with a cosine learning-rate schedule"],
+        ["Validation", "122 complete observations, grouped by time blocks"],
+        ["Checkpoint choice", "Highest pooled validation Panoptic Quality"]
+      ],
+      "takeaway": "Foreground is sparse. Shape overlap and object detection both matter.",
+      "speaker_notes": "Filaments cover very little of each image. BCE learns pixel classification, while Dice emphasizes foreground overlap. We use AdamW, cosine scheduling and mixed precision. All labels for one observation stay together. Validation scores complete images and pools matching counts across annotation sets, following the organizer's reference. A match requires IoU above 0.5.",
+      "references": ["dice", "adamw", "cosine", "pq", "official"],
+      "local_sources": ["losses.py", "train.py", "data.py", "splits/split_v1.json", "results/evaluation_reference.json"],
+      "seconds": 40
+    },
+    {
+      "kind": "experiments",
+      "title": "Controlled comparisons",
+      "rows": [
+        ["Learning rate", "Low, baseline and high settings"],
+        ["Data", "1024 resolution, preprocessing, augmentation and targets"],
+        ["Loss", "BCE + Dice compared with BCE + Tversky"],
+        ["Model", "U-Net compared with U-Net++"],
+        ["Repeatability", "Fresh seeds after configuration selection"]
+      ],
+      "takeaway": "Comparisons match sampled images and planned update attempts.",
+      "speaker_notes": "We kept the split fixed and matched sample budgets and planned update attempts. The six-epoch screen can favor quick learners, so the strongest candidates received full-budget runs before selection. Fresh seeds then measured variability. A few AMP overflow skips can change applied update counts. The 1024 experiment also changes field of view, and consensus changes observation weighting, so those comparisons have limits.",
+      "references": ["tversky", "unetplusplus"],
+      "local_sources": ["experiments.py", "configs/", "results/person_b_study/"],
+      "seconds": 35
+    },
+    {
+      "kind": "results",
+      "title": "Validation results",
+      "pending_text": "The final study report is still pending",
+      "takeaway": "Local PQ measures the frozen validation set. Kaggle uses different images.",
+      "speaker_notes": "Explain the measured full-budget comparison first, then the selected configuration's mean and sample standard deviation across the fresh runs. State the number of seeds and keep the selection seed separate from the final average. Distinguish a measured small gain from one that is comparable with seed-to-seed variability. Include unsuccessful trials in the experiment log. Do not substitute per-image standard deviation for variation across training runs. No Kaggle score is available until the team uploads the exact CSV and records the returned result.",
+      "references": ["pq", "official"],
+      "local_sources": ["results/person_b_study/summary.json", "results/person_b_study/configuration_selection.json"],
+      "seconds": 40
+    },
+    {
+      "kind": "examples",
+      "case_role": "highest",
+      "title": "Highest validation score",
+      "pending_text": "Prediction panels will come from the selected trained model",
+      "takeaway": "Validation supports quantitative ranking. Test examples support visual discussion.",
+      "speaker_notes": "Use an actual successful and difficult case. Point to the visible pixels or regions that support the explanation, such as a missed faint extension, a merge, a broken filament or a false positive. Quantitative best and worst rankings must use labelled validation images. The test set has no labels, so describe test examples as visual illustrations rather than measured best or worst cases. Explain whether the predicted outline preserves the filament's extent and whether connected components divide it sensibly. Replace these prompts with observations from the final panels before recording.",
+      "references": ["official"],
+      "local_sources": ["report.py", "results/person_b_study/", "runs/person_b_final/"],
+      "seconds": 25
+    },
+    {
+      "kind": "examples",
+      "case_role": "lowest",
+      "title": "Lowest validation score",
+      "pending_text": "The difficult validation example is still pending",
+      "takeaway": "A low score identifies a difficult labelled case for closer inspection.",
+      "speaker_notes": "This case has the lowest selected-model observation mean PQ. Discuss its visible errors without assuming that a low score has only one cause. Compare missed or extra objects, mask shape, and annotator disagreement. Fragmentation and merge counts need to be interpreted alongside detection counts and PQ.",
+      "references": ["official"],
+      "local_sources": ["study_report.py", "results/person_b_study/"],
+      "seconds": 25
+    },
+    {
+      "kind": "efficiency",
+      "title": "Efficiency and handoff",
+      "pending_text": "Final model size and measured pipeline timings are pending",
+      "takeaway": "Person C receives probabilities, instance maps, weights and the exact configuration.",
+      "speaker_notes": "Report the actual selected model's parameter count and inference-weight file size. State what the training-time measurement includes. For inference, use the measured end-to-end pipeline on this computer, including reading, preprocessing, prediction, instance conversion and encoding. Distinguish that from model-only timing. The saved probabilities let Person C compare separation and cleanup methods without retraining. A smaller inference checkpoint alone is not a compression experiment. Person C still needs the quality, speed and size comparison for any compression method included in the final work.",
+      "references": ["smp"],
+      "local_sources": ["train.py", "predict.py", "runs/person_b_final/"],
+      "seconds": 35
+    },
+    {
+      "kind": "examples",
+      "case_role": "test",
+      "title": "Test image illustration",
+      "pending_text": "The unlabelled test illustration is still pending",
+      "takeaway": "No ground-truth accuracy or best/worst ranking is available for this test image.",
+      "speaker_notes": "Optional shared-results or backup slide. Describe what the predicted probability and mask look like on this unlabelled image. State the image-selection rule. Do not call it an accurate, best or worst case because no test labels are available. Kaggle acceptance and score are also unavailable because this work does not upload the CSV.",
+      "references": ["official"],
+      "local_sources": ["study_report.py", "results/person_b_study/", "runs/person_b_final/"],
+      "seconds": 0
+    },
+    {
+      "kind": "references",
+      "title": "Model and loss references",
+      "references": ["unet", "resnet", "dice", "tversky", "unetplusplus", "smp"],
+      "speaker_notes": "Bibliography. No narration is needed.",
+      "seconds": 0
+    },
+    {
+      "kind": "references",
+      "title": "Evaluation and training references",
+      "references": ["magfilo", "pq", "official", "adamw", "cosine"],
+      "speaker_notes": "Bibliography. The project uses ordinary cosine annealing without SGDR restarts. The MAGFiLO paper describes the dataset; only the supplied competition training labels enter this project.",
+      "seconds": 0
+    }
+  ]
+}
+

@@ -1,0 +1,33 @@
+# E0: all experiments inherit these explicit baseline decisions.
+# Set FILAMENT_DATA, or extend this file in an ignored configs/local*.yaml.
+run:
+  name: E0_baseline_seed42
+  output_dir: runs/E0_baseline_seed42
+seed: 42
+data:
+  split: splits/split_v1.json
+  crop: 512
+  batch_size: 4
+  num_workers: 2
+  val_num_workers: 1
+  epoch_length: 960
+  pos_frac: 0.7
+  target: per_set
+  augment: true
+model:
+  architecture: unet
+  encoder_name: resnet34
+  encoder_weights: imagenet
+loss:
+  name: bce_dice
+train:
+  epochs: 20
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  patience: 8
+  amp: true
+  deterministic: true
+evaluation:
+  primary_metric: PQ_dataset
+  threshold: 0.5
+  iou_threshold: 0.5

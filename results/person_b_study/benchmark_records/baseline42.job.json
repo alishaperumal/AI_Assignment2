@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Users\\user-pc\\Desktop\\COS711_Assig2\\AI_Assignment2\\.venv\\Scripts\\python.exe",
+    "-u",
+    "predict.py",
+    "--checkpoint",
+    "runs/E0_baseline_seed42/best_weights.pt",
+    "--output",
+    "runs/E0_baseline_seed42/submission.csv",
+    "--device",
+    "cuda"
+  ],
+  "pid": 6612,
+  "started_utc": "2026-11-01T02:59:48.489011+00:00",
+  "sleep_prevention": true,
+  "status": "completed",
+  "free_bytes_at_start": 19860058112,
+  "child_pid": 29156,
+  "exit_code": 0,
+  "elapsed_seconds": 121.6427220000187,
+  "finished_utc": "2026-11-01T03:01:50.132285+00:00",
+  "free_bytes_at_end": 19859304448
+}

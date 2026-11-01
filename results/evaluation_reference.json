@@ -1,0 +1,14 @@
+{
+  "url": "https://www.kaggle.com/api/v1/kernels/pull/azimahmadzadeh/self-evaluation-notebook",
+  "page": "https://www.kaggle.com/code/azimahmadzadeh/self-evaluation-notebook",
+  "source_sha256": "ae7c9445b4eee2b77b216df5c9772fdf92fda15611e98abd7ef5f02a4e380801",
+  "version": 6,
+  "author": "Azim Ahmadzadeh",
+  "last_run": "2026-10-28T21:44:50.9012534Z",
+  "verified_on": "2026-10-31",
+  "scope": "Public organizer self-evaluation reference, not a guarantee of private leaderboard edge-case checks. No external annotations downloaded or notebook executed.",
+  "primary_metric": "PQ_dataset",
+  "aggregation": "Pool all true-positive IoUs and false-positive/negative counts across every annotation set.",
+  "matching": "All mask pairs with IoU strictly greater than 0.5; raw overlapping GT masks preserved for evaluation.",
+  "relations": "Reference diagnostic links use any overlap; custom robust relations retained separately."
+}

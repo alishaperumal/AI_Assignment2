@@ -1,0 +1,6 @@
+extends: baseline.yaml
+run:
+  name: E4_unetplusplus_seed42
+  output_dir: runs/E4_unetplusplus_seed42
+model:
+  architecture: unetplusplus

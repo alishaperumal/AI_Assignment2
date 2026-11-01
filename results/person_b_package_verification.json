@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "verified_at_utc": "2026-11-01T03:27:20.686659+00:00",
+  "status": "passed",
+  "package_path": "C:\\Users\\user-pc\\Desktop\\COS711_Assig2\\AI_Assignment2\\runs\\person_b_final",
+  "method": "Independent read-only enumeration, streamed SHA256 of every package file, canonical-source comparison and parsed config/coverage checks; no model imports",
+  "files": {
+    "total_files_including_manifest": 387,
+    "manifest_entries": 386,
+    "total_bytes_including_manifest": 1598114559,
+    "manifested_bytes": 1598052549,
+    "manifest_sha256": "5e30103dddf8fb9afe68270fcd2274418906db5a9f6a6841c3a349d72fd10ff6",
+    "missing": [],
+    "unexpected": [],
+    "unsafe_paths": [],
+    "hash_or_size_mismatches": [],
+    "transient_progress_excluded": true
+  },
+  "canonical_artifacts": {
+    "best_weights.pt": {
+      "package_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+      "canonical_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+      "expected_sha256": "617f931eecf9f8b5956748ef9c5c912bfc32d9c87067b524c42d687f35c81377",
+      "matches": true
+    },
+    "splits/split_v1.json": {
+      "package_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3",
+      "canonical_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3",
+      "expected_sha256": "58245fc1fdc3c39c7e482d703cd4c9e26ebdbcae6e08c6c328149d417284eec3",
+      "matches": true
+    },
+    "submission.csv": {
+      "package_sha256": "4a7fbc136f7a8f9aad0a9bbffa328be3b90609d99aa4a73fa8f1f4167be38120",
+      "canonical_sha256": "4a7fbc136f7a8f9aad0a9bbffa328be3b90609d99aa4a73fa8f1f4167be38120",
+      "expected_sha256": "4a7fbc136f7a8f9aad0a9bbffa328be3b90609d99aa4a73fa8f1f4167be38120",
+      "matches": true
+    }
+  },
+  "configuration": {
+    "original_matches_canonical": true,
+    "portable_differs_only_in_four_paths": true,
+    "numerical_and_model_settings_preserved": true,
+    "rewritten_paths": {
+      "data.data_root": "data",
+      "data.cache_dir": "cache",
+      "data.split": "splits/split_v1.json",
+      "run.output_dir": "runs/reproduction"
+    },
+    "seed": 45,
+    "architecture": "unet",
+    "augment": false
+  },
+  "coverage": {
+    "validation_archives": 122,
+    "test_archives": 180,
+    "validation_matches_frozen_split": true,
+    "test_matches_sidecar_and_raw_manifest": true,
+    "csv_rows": 1831,
+    "csv_unique_ids": 1831,
+    "csv_columns": [
+      "filament_id",
+      "segmentation_rle"
+    ],
+    "csv_coverage_matches_zero_detection_record": true,
+    "zero_detection_images": [
+      "20180507140210Th",
+      "20200310113230Ch",
+      "20211214174010Mh"
+    ]
+  },
+  "provenance": {
+    "evaluation_checkpoint_matches": true,
+    "submission_checkpoint_matches": true,
+    "manifest_checkpoint_matches": true,
+    "handoff_checkpoint_matches": true,
+    "handoff_split_matches": true,
+    "deep_csv_masks_verified": true,
+    "validation_observations": 122,
+    "validation_annotation_sets": 200,
+    "kaggle_acceptance_verified": false
+  },
+  "implementation_checks": {
+    "status": "passed",
+    "passed": 101,
+    "failed": 0,
+    "record_matches_canonical": true,
+    "recorded_log_sha256": "7e6770eea3a2a116117ce3aebb2aed4b603c89b71d9437cc9b9f2010edebb245",
+    "actual_log_sha256": "7e6770eea3a2a116117ce3aebb2aed4b603c89b71d9437cc9b9f2010edebb245",
+    "packaged_tested_source_hashes_match": true,
+    "packaged_tested_sources_checked": [
+      "package_person_b.py",
+      "study_report.py"
+    ]
+  },
+  "prior_failure_log": {
+    "path": "runs/overnight/logs/package_person_b.log",
+    "bytes": 893,
+    "sha256": "ce9c73fae6b484ae322b50944a41889e2c494dfa9f46cfffa9f1d523a7e4b084"
+  },
+  "package_modified_by_this_verification": false
+}
